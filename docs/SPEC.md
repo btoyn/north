@@ -148,14 +148,18 @@ texts and calls, not lunches.
 ## 6. Groups
 
 All four kinds are wanted: **bank, territory, tier, and lists he makes
-himself.** The self-made ones should be a *combination* of named lists and
-tags — lightweight to create, and a group he can act on: email the whole list,
-schedule the whole list, see coverage across the whole list.
+himself.** The first three are facts about a lender and were already grouped
+on. The fourth is the grouping that exists only in his head.
 
-This is the one genuinely new feature in the spec. Everything else is
-subtraction or repair.
+*Built, 21 Sep.* One model serves both halves of what he asked for ("probably
+a combo of the first two"). From a list you see who is on it; from a lender
+you tick the lists they belong to, which is a tag in everything but name. The
+rows are the same either way.
 
----
+A list surfaces as a sphere, so every screen that already renders spheres
+renders lists too without knowing they exist. Unlike the other filtered views,
+a list survives being empty: someone made it deliberately, and one that
+vanished when its last member came off would look like the app had lost it.
 
 ## 7. Scheduling and email — the thing that has to work
 

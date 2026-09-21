@@ -4,7 +4,8 @@ import { PageHeader } from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/button";
 import { GroupProposalsNeedingAttention } from "@/components/group-proposals-attention";
 import { getGroupProposals } from "@/lib/dashboard";
-import { getSphereRows } from "@/lib/data";
+import { getLenderLists, getSphereRows } from "@/lib/data";
+import { listSpheres } from "@/lib/lists";
 import {
   SPHERE_GROUP_ORDER,
   sphereCounts,
@@ -25,9 +26,16 @@ export const metadata = { title: "Spheres" };
  * of chips above the lender list, now named views you can go to.
  */
 export default async function SpheresPage() {
-  const [rows, groupProposals] = await Promise.all([getSphereRows(), getGroupProposals()]);
-  const counts = sphereCounts(rows);
-  const shown = visibleSpheres(counts);
+  const [rows, groupProposals, lists] = await Promise.all([
+    getSphereRows(),
+    getGroupProposals(),
+    getLenderLists(),
+  ]);
+  // A person's own lists are spheres too, they just live in a table rather
+  // than in the source.
+  const extra = listSpheres(lists);
+  const counts = sphereCounts(rows, extra);
+  const shown = visibleSpheres(counts, extra);
 
   const tiers = shown.filter((s) => s.group === "Tiers");
   const untiered = counts.get("tier-none")?.total ?? 0;

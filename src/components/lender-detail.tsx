@@ -3,10 +3,11 @@ import { PageHeader } from "@/components/page-header";
 import { Badge, CoverageBadge, SampleBadge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ListPicker } from "@/components/list-picker";
 import { TierPicker } from "@/components/tier-picker";
 import { TimelineFilter } from "@/components/timeline-filter";
 import { createClient } from "@/lib/supabase/server";
-import { getPreferences } from "@/lib/data";
+import { getLenderLists, getPreferences } from "@/lib/data";
 import { lenderCoverage } from "@/lib/coverage";
 import { tierGoalDays } from "@/lib/tiers";
 import { isLookOpen, lookTitle, readLookStatus } from "@/lib/looks";
@@ -76,6 +77,7 @@ export async function LenderDetail({
     { data: upcomingMeetings },
     { data: history },
     { data: institutions },
+    lists,
   ] = await Promise.all([
     supabase.from("lender_coverage").select("*").eq("lender_id", id).maybeSingle(),
     supabase
@@ -116,6 +118,7 @@ export async function LenderDetail({
       .eq("lender_id", id)
       .order("start_date", { ascending: false }),
     supabase.from("institutions").select("name").is("deleted_at", null).order("name"),
+    getLenderLists(),
   ]);
 
   // Measured against this lender's tier, not a flat 30 days.
@@ -382,6 +385,8 @@ export async function LenderDetail({
   /* Status strip. Tier sits first and is editable in place: it decides how often
      this person is worth contacting, so it is the one field worth changing
      without opening a form. */
+  const listStrip = <ListPicker lenderId={lender.id} lists={lists} />;
+
   const statusStrip = (
     <div className={cn("flex flex-wrap items-center gap-2", variant === "page" ? "mb-5" : "mb-4")}>
       <TierPicker lenderId={lender.id} tier={lender.relationship_tier} />
@@ -401,6 +406,7 @@ export async function LenderDetail({
       <div>
         {subtitle && <p className="mb-3 text-sm text-muted">{subtitle}</p>}
         {statusStrip}
+        <div className="mb-4">{listStrip}</div>
         <div className="space-y-4">
           {glance}
           {openPromises}
@@ -415,6 +421,7 @@ export async function LenderDetail({
     <>
       <PageHeader title={lender.full_name} description={subtitle} />
       {statusStrip}
+      <div className="mb-5">{listStrip}</div>
 
       <div className="grid gap-5 lg:grid-cols-3">
         <div className="space-y-5 lg:col-span-2">

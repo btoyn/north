@@ -2,6 +2,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { lenderCoverage, type LenderCoverageResult } from "@/lib/coverage";
 import { qualifyingTouchAt, readTier, tierGoalDays } from "@/lib/tiers";
+import { sortLists, type LenderList } from "@/lib/lists";
 import type { SphereRow } from "@/lib/spheres";
 import type { CoverageRow, Lender, UserPreferences } from "@/lib/types";
 
@@ -320,4 +321,36 @@ export async function ensureSampleData(): Promise<void> {
   if (!user) return;
 
   await supabase.rpc("create_sample_data", { p_user_id: user.id });
+}
+
+/**
+ * Every list with its members, in one round trip per table.
+ *
+ * Two queries rather than a join, then stitched in memory: the join would
+ * repeat each list's name once per member, and the membership table is the
+ * one that grows. At 137 lenders neither is slow, but the shape is the one
+ * that stays sensible.
+ */
+export async function getLenderLists(): Promise<LenderList[]> {
+  const supabase = await createClient();
+
+  const [{ data: lists }, { data: members }] = await Promise.all([
+    supabase.from("lender_lists").select("id, name"),
+    supabase.from("lender_list_members").select("list_id, lender_id"),
+  ]);
+
+  const byList = new Map<string, string[]>();
+  for (const m of members ?? []) {
+    const existing = byList.get(m.list_id);
+    if (existing) existing.push(m.lender_id);
+    else byList.set(m.list_id, [m.lender_id]);
+  }
+
+  return sortLists(
+    (lists ?? []).map((l) => ({
+      id: l.id,
+      name: l.name,
+      memberIds: byList.get(l.id) ?? [],
+    })),
+  );
 }

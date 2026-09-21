@@ -8,7 +8,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { LenderDetail } from "@/components/lender-detail";
 import { LenderSlideOver } from "@/components/lender-slide-over";
 import { FlatLenderList, GroupedLenderList, type SphereListLender } from "@/components/sphere-lists";
-import { getSphereRows } from "@/lib/data";
+import { getLenderLists, getSphereRows } from "@/lib/data";
+import { listSpheres } from "@/lib/lists";
 import { findSphere, lendersInSphere, sphereCounts } from "@/lib/spheres";
 import { groupLenders } from "@/lib/lender-groups";
 import { TIER_CADENCE } from "@/lib/tiers";
@@ -16,7 +17,9 @@ import { matchScore } from "@/lib/fuzzy";
 
 export async function generateMetadata({ params }: { params: Promise<{ key: string }> }) {
   const { key } = await params;
-  return { title: findSphere(key)?.label ?? "Sphere" };
+  // A list's name lives in the database, so the tab title needs it too.
+  const lists = await getLenderLists();
+  return { title: findSphere(key, listSpheres(lists))?.label ?? "Sphere" };
 }
 
 /**
@@ -36,11 +39,13 @@ export default async function SpherePage({
   const { key } = await params;
   const { q, lender: openLenderId, timeline = "all" } = await searchParams;
 
-  const sphere = findSphere(key);
+  const [rows, lists] = await Promise.all([getSphereRows(), getLenderLists()]);
+  const extra = listSpheres(lists);
+
+  const sphere = findSphere(key, extra);
   if (!sphere) notFound();
 
-  const rows = await getSphereRows();
-  const counts = sphereCounts(rows);
+  const counts = sphereCounts(rows, extra);
   const count = counts.get(sphere.key)!;
 
   let list = lendersInSphere(rows, sphere);

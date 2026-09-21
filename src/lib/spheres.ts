@@ -37,7 +37,13 @@ export interface SphereRow {
   hasOverduePromise: boolean;
 }
 
-export type SphereGroup = "Tiers" | "Attention" | "Momentum" | "Territory" | "Everyone";
+export type SphereGroup =
+  | "Tiers"
+  | "Attention"
+  | "Momentum"
+  | "Territory"
+  | "Lists"
+  | "Everyone";
 
 export interface SphereDef {
   key: string;
@@ -200,11 +206,22 @@ export const SPHERE_GROUP_ORDER: SphereGroup[] = [
   "Attention",
   "Momentum",
   "Territory",
+  // Above "Everyone" because a list is someone's own grouping and worth more
+  // to them than the catch-all underneath it.
+  "Lists",
   "Everyone",
 ];
 
-export function findSphere(key: string): SphereDef | null {
-  return SPHERES.find((s) => s.key === key) ?? null;
+/**
+ * A sphere by key, built-in or otherwise.
+ *
+ * `extra` carries the ones that cannot be known at module scope because they
+ * are rows in a database — a person's own lists. Every function here takes
+ * them the same way, so a list behaves like any other sphere everywhere
+ * downstream and no screen has to learn a second concept.
+ */
+export function findSphere(key: string, extra: readonly SphereDef[] = []): SphereDef | null {
+  return SPHERES.find((s) => s.key === key) ?? extra.find((s) => s.key === key) ?? null;
 }
 
 /** The lenders in one sphere, in the order that sphere wants them. */
@@ -227,10 +244,13 @@ export interface SphereCount {
  * One pass per sphere over the same rows the detail screen will filter, so the
  * number on the card is the number of rows behind it.
  */
-export function sphereCounts(rows: SphereRow[]): Map<string, SphereCount> {
+export function sphereCounts(
+  rows: SphereRow[],
+  extra: readonly SphereDef[] = [],
+): Map<string, SphereCount> {
   const counts = new Map<string, SphereCount>();
 
-  for (const sphere of SPHERES) {
+  for (const sphere of [...SPHERES, ...extra]) {
     const matched = rows.filter(sphere.match);
     const covered = matched.filter((r) => isCovered(r)).length;
     counts.set(sphere.key, {
@@ -253,9 +273,22 @@ export function isCovered(row: SphereRow): boolean {
   return row.coverage.hasConfirmedFutureMeeting || row.coverage.personal === "on_track";
 }
 
-/** Spheres that are worth showing: every tier, plus any view with someone in it. */
-export function visibleSpheres(counts: Map<string, SphereCount>): SphereDef[] {
-  return SPHERES.filter(
-    (s) => s.group === "Tiers" || s.group === "Everyone" || (counts.get(s.key)?.total ?? 0) > 0,
+/**
+ * Spheres worth showing: every tier, plus any view with someone in it.
+ *
+ * A list survives being empty, unlike the other filtered views. Someone made
+ * it deliberately, and a list that vanishes the moment its last member comes
+ * off looks like the app lost it.
+ */
+export function visibleSpheres(
+  counts: Map<string, SphereCount>,
+  extra: readonly SphereDef[] = [],
+): SphereDef[] {
+  return [...SPHERES, ...extra].filter(
+    (s) =>
+      s.group === "Tiers" ||
+      s.group === "Everyone" ||
+      s.group === "Lists" ||
+      (counts.get(s.key)?.total ?? 0) > 0,
   );
 }
