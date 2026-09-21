@@ -2,7 +2,7 @@
 
 One system for your ~140 commercial lenders across Salt Lake City and St. George. It answers one
 question — *who is slipping?* — in five minutes a day. Your real list is loaded; this is not a demo.
-Live at `north.vercel.app`.
+Live at `north-chi-three.vercel.app`.
 
 This file is the single source for the guide: it renders inside the app at **Guide** in the sidebar,
 and reads as plain markdown on GitHub. Editing it updates both.
@@ -411,7 +411,7 @@ lets it send the actual meeting invitation once a date is agreed.
 1. **Fix the Site URL in Supabase** (Authentication → URL Configuration). This is a different field
    from the redirect list and is almost certainly still `http://localhost:3000`. It is the address
    Supabase builds confirmation and password-reset links from, so until it points at
-   `https://north.vercel.app` those emails lead nowhere — which is what broke the login link
+   `https://north-chi-three.vercel.app` those emails lead nowhere — which is what broke the login link
    sent to a coworker. Add the redirect addresses on the same screen while you are there, with the
    `https://` prefix.
 2. **Check your availability** in Settings → *When you can meet*. It starts on sensible windows —

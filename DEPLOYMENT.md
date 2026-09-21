@@ -130,13 +130,19 @@ Go to <https://entra.microsoft.com> and sign in with your work account.
      paste:
 
      ```
-     https://north.vercel.app/api/microsoft/callback
+     https://north-chi-three.vercel.app/api/microsoft/callback
      ```
 
      This must match character for character, including `https://` and with no
      trailing slash. A mismatch is the single most common failure, and
      Microsoft's error message names the URI it expected — if you see that,
      copy what it expected.
+
+     The odd-looking host is Vercel's, not a typo: `north.vercel.app` was
+     already taken, so the project was given `north-chi-three`. If a custom
+     domain is ever added, add its callback address here as a second redirect
+     URI rather than replacing this one — Entra accepts several, and keeping
+     both means the old address does not break the moment DNS moves.
 4. **Register**.
 
 You land on the Overview page. Copy two values from it now:

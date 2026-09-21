@@ -36,7 +36,7 @@ These are not preferences to be polite about — they were stated directly and r
 | Database | **Supabase** Postgres, project `oflcbdnidtbqbwzpmvgp` ("lender-crm") |
 | Auth | Supabase Auth, email + password, publishable (`sb_publishable_…`) keys |
 | Hosting | **Vercel**, project `north` (`prj_epKWAZtO4PAIA3DSrxmxH1xyUmsV`), team `imbl` |
-| Live at | `north.vercel.app` |
+| Live at | `north-chi-three.vercel.app` |
 | Repo | `btoyn/north`, default branch `main` |
 | Tests | **Vitest**, 117 tests across 8 files, all pure logic |
 
