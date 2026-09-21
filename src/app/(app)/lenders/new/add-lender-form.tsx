@@ -12,12 +12,21 @@ import {
   type DuplicateCandidate,
 } from "../actions";
 
-export function AddLenderForm({ institutionNames }: { institutionNames: string[] }) {
+export function AddLenderForm({
+  institutionNames,
+  lists,
+}: {
+  institutionNames: string[];
+  lists: { id: string; name: string }[];
+}) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [duplicates, setDuplicates] = useState<DuplicateCandidate[] | null>(null);
   const [pendingInput, setPendingInput] = useState<CreateLenderInput | null>(null);
   const [followUp, setFollowUp] = useState<CreateLenderInput["followUp"]>("in_30_days");
+  const [listIds, setListIds] = useState<string[]>([]);
+  const [newListName, setNewListName] = useState("");
+  const [partial, setPartial] = useState<{ lenderId: string; message: string } | null>(null);
 
   function submit(input: CreateLenderInput) {
     setError(null);
@@ -27,6 +36,10 @@ export function AddLenderForm({ institutionNames }: { institutionNames: string[]
       if (result?.status === "duplicates") {
         setDuplicates(result.candidates);
         setPendingInput(input);
+      } else if (result?.status === "saved_without_lists") {
+        // The lender exists. Say so plainly rather than showing a red error
+        // over a form that would create them a second time.
+        setPartial({ lenderId: result.lenderId, message: result.message });
       } else if (result?.status === "error") {
         setError(result.message);
       }
@@ -49,7 +62,29 @@ export function AddLenderForm({ institutionNames }: { institutionNames: string[]
       interests: String(f.get("interests") ?? ""),
       followUp,
       followUpDate: String(f.get("followUpDate") ?? ""),
+      listIds,
+      newListName,
     });
+  }
+
+  if (partial) {
+    return (
+      <Card>
+        <CardContent className="space-y-3 pt-5">
+          <h2 className="font-semibold">Lender saved</h2>
+          <p className="text-sm text-muted">{partial.message}</p>
+          <p className="text-sm text-muted">
+            Add them to the group from their page — nothing else was lost.
+          </p>
+          <Link
+            href={`/lenders/${partial.lenderId}`}
+            className="inline-flex text-sm font-semibold text-primary hover:underline"
+          >
+            Open their page →
+          </Link>
+        </CardContent>
+      </Card>
+    );
   }
 
   if (duplicates) {
@@ -170,6 +205,45 @@ export function AddLenderForm({ institutionNames }: { institutionNames: string[]
           <div>
             <Label htmlFor="notes">Notes</Label>
             <Textarea id="notes" name="notes" rows={3} />
+          </div>
+
+          <div>
+            <Label htmlFor="newListName">Groups</Label>
+            {lists.length > 0 && (
+              <div className="mb-2 flex flex-wrap gap-2">
+                {lists.map((l) => {
+                  const on = listIds.includes(l.id);
+                  return (
+                    <label key={l.id} className="cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={on}
+                        onChange={() =>
+                          setListIds((ids) =>
+                            on ? ids.filter((id) => id !== l.id) : [...ids, l.id],
+                          )
+                        }
+                        className="peer sr-only"
+                      />
+                      <span className="inline-flex h-11 items-center rounded-[10px] border border-border px-3 text-[13.5px] font-medium transition-colors peer-checked:border-primary peer-checked:bg-primary-soft peer-checked:text-primary peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary sm:h-9">
+                        {l.name}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+            <Input
+              id="newListName"
+              value={newListName}
+              onChange={(e) => setNewListName(e.target.value)}
+              placeholder={lists.length > 0 ? "Or start a new group…" : "e.g. Golf crew"}
+            />
+            <FieldHint>
+              {lists.length > 0
+                ? "Tick the ones they belong to. You can change this later."
+                : "Your own grouping, whatever it is. You can change this later."}
+            </FieldHint>
           </div>
 
           <div>

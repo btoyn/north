@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { logAudit } from "@/lib/audit";
 import { normalizeName } from "@/lib/utils";
 import { isTier } from "@/lib/tiers";
+import { listNameProblem, normalizeListName } from "@/lib/lists";
 
 export interface DuplicateCandidate {
   id: string;
@@ -57,13 +58,60 @@ export interface CreateLenderInput {
   interests?: string;
   followUp: "next_week" | "in_30_days" | "before_next_trip" | "custom" | "skip";
   followUpDate?: string;
+  /** Existing lists to put them on straight away. */
+  listIds?: string[];
+  /** A list to make up on the spot and put them on. */
+  newListName?: string;
   /** Set once the user has reviewed duplicate warnings. */
   ignoreDuplicates?: boolean;
 }
 
 export type CreateLenderResult =
   | { status: "duplicates"; candidates: DuplicateCandidate[] }
+  /** The lender is saved; only the group membership failed. */
+  | { status: "saved_without_lists"; lenderId: string; message: string }
   | { status: "error"; message: string };
+
+/**
+ * Puts a brand-new lender on the groups that were ticked on the way in.
+ *
+ * Returns a sentence when something went wrong and null when all is well. The
+ * lender row already exists by this point, so nothing in here is allowed to
+ * throw the creation away — the worst case is a saved lender and a message
+ * saying the groups didn't take.
+ */
+async function addToLists(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  lenderId: string,
+  input: { listIds?: string[]; newListName?: string },
+): Promise<string | null> {
+  const listIds = [...new Set(input.listIds ?? [])].filter(Boolean);
+  const newName = normalizeListName(input.newListName ?? "");
+
+  if (newName) {
+    const { data: existing } = await supabase.from("lender_lists").select("id, name");
+    const problem = listNameProblem(newName, existing ?? []);
+    if (problem) return problem;
+
+    const { data: created, error } = await supabase
+      .from("lender_lists")
+      .insert({ user_id: userId, name: newName })
+      .select("id")
+      .single();
+    if (error) return `Saved, but the group "${newName}" wasn't created: ${error.message}`;
+    listIds.push(created.id);
+  }
+
+  if (listIds.length === 0) return null;
+
+  const { error } = await supabase.from("lender_list_members").upsert(
+    listIds.map((listId) => ({ list_id: listId, lender_id: lenderId, user_id: userId })),
+    { onConflict: "list_id,lender_id" },
+  );
+  if (error) return `Saved, but the groups didn't take: ${error.message}`;
+  return null;
+}
 
 export async function createLender(input: CreateLenderInput): Promise<CreateLenderResult | never> {
   const supabase = await createClient();
@@ -195,6 +243,13 @@ export async function createLender(input: CreateLenderInput): Promise<CreateLend
     });
   }
 
+  // Groups, while you still remember why you met them. A failure here is not
+  // worth losing the lender over, so it is reported and the record stands.
+  const listProblem = await addToLists(supabase, user.id, lender.id, {
+    listIds: input.listIds,
+    newListName: input.newListName,
+  });
+
   await logAudit(supabase, user.id, {
     entityType: "lender",
     entityId: lender.id,
@@ -203,6 +258,10 @@ export async function createLender(input: CreateLenderInput): Promise<CreateLend
   });
 
   revalidatePath("/spheres", "layout");
+  revalidatePath("/lenders", "layout");
+  if (listProblem) {
+    return { status: "saved_without_lists", lenderId: lender.id, message: listProblem };
+  }
   redirect(`/lenders/${lender.id}`);
 }
 
