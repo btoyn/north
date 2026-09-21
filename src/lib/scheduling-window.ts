@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { MEETING_TYPE_DURATIONS } from "./labels";
 import { getFreeBusy } from "./microsoft/graph";
 import { getConnection } from "./microsoft/tokens";
-import type { AvailabilityRule } from "./scheduling";
+import { isUsingDefaultAvailability, withDefaultAvailability, type AvailabilityRule } from "./scheduling";
 
 /**
  * The shape of the next couple of weeks: the rules, and what's already spoken
@@ -27,6 +27,8 @@ export type CalendarSource = "crm" | "outlook" | "outlook_unavailable";
 
 export interface SchedulingWindow {
   rules: AvailabilityRule[];
+  /** True when `rules` are the shipped defaults, so a screen can say so. */
+  usingDefaultAvailability: boolean;
   horizonDays: number;
   slotCount: number;
   /** Absolute instants, ready to cross to the browser. */
@@ -93,13 +95,18 @@ export async function loadSchedulingWindow(
    * an empty answer must never read as a free week. */
   const calendar = await mergeOutlookBusy(busy, now, horizonDays);
 
+  const stored: AvailabilityRule[] = (rules ?? []).map((r) => ({
+    meetingType: r.meeting_type,
+    weekdays: r.weekdays ?? [],
+    startMinute: r.start_minute,
+    endMinute: r.end_minute,
+  }));
+
   return {
-    rules: (rules ?? []).map((r) => ({
-      meetingType: r.meeting_type,
-      weekdays: r.weekdays ?? [],
-      startMinute: r.start_minute,
-      endMinute: r.end_minute,
-    })),
+    // Defaults when nothing has ever been saved, so a fresh account can
+    // propose a lunch without being sent to Settings first.
+    rules: withDefaultAvailability(stored),
+    usingDefaultAvailability: isUsingDefaultAvailability(stored),
     horizonDays,
     slotCount: prefs?.proposal_slot_count ?? 2,
     busy,

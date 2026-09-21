@@ -35,6 +35,11 @@ finding is narrower and more useful: **scheduling has never been used because
 availability windows were never set, so it had nothing to suggest from.** The
 feature was gated behind a setup step nobody was told to do.
 
+*Fixed, 21 Sep.* The app ships default windows and uses them until someone
+saves their own, so a proposal works on a fresh account. Turning a meeting
+type off still works, because an off switch is now stored explicitly rather
+than implied by a missing row.
+
 ---
 
 ## 2. The one-sentence version

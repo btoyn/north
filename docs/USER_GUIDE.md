@@ -414,8 +414,9 @@ lets it send the actual meeting invitation once a date is agreed.
    `https://north.vercel.app` those emails lead nowhere — which is what broke the login link
    sent to a coworker. Add the redirect addresses on the same screen while you are there, with the
    `https://` prefix.
-2. **Set your availability** in Settings → *When you can meet*. All five rows are empty, so nothing
-   suggests dates until you fill them in. Lunch, breakfast and office visits are the three you use.
+2. **Check your availability** in Settings → *When you can meet*. It starts on sensible windows —
+   lunches and breakfasts midweek, office visits across the working day, golf on a Friday — and
+   those are live, so proposals work without you touching anything. Change what's wrong and save.
 3. **Add your email signature** in Settings → *Email signature*. It is blank, so the first
    loan-update draft on each loan has no sign-off. After the first one your own text carries forward,
    so this is a one-time thing.

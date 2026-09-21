@@ -215,7 +215,7 @@ Genuinely undecided. Do not resolve these unilaterally.
 1. **Supabase Site URL** is almost certainly still `http://localhost:3000`. It is a *different
    field* from the redirect list, and it is what confirmation and password-reset links are built
    from — this is what broke a login link sent to a coworker.
-2. **Set availability** in Settings. All five rows are empty.
+2. **Check availability** in Settings. Defaults are in use until something is saved.
 3. **Add an email signature** in Settings. Blank, so every loan's first draft has no sign-off.
 4. **12 lenders have no email address** and cannot receive a proposal or an update.
 

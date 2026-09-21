@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input, Label, FieldHint } from "@/components/ui/input";
+import { DEFAULT_AVAILABILITY } from "@/lib/scheduling";
 import { cn } from "@/lib/utils";
 import { updateAvailability } from "./actions";
 
@@ -59,17 +60,22 @@ export function AvailabilityCard({
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Nothing saved means the app is scheduling against the defaults, so the form
+  // opens showing those rather than five empty rows. Otherwise the screen would
+  // say "no days selected", which reads as "nothing will be proposed", while
+  // the app happily proposes lunches.
+  const untouched = initialRules.length === 0;
   const [rules, setRules] = useState<AvailabilityRuleState[]>(() =>
     TYPES.map((t) => {
       const existing = initialRules.find((r) => r.meetingType === t.value);
-      return (
-        existing ?? {
-          meetingType: t.value,
-          weekdays: [],
-          startMinute: t.value === "breakfast" ? 8 * 60 : 11 * 60,
-          endMinute: t.value === "breakfast" ? 10 * 60 : 13 * 60,
-        }
-      );
+      if (existing) return existing;
+      const fallback = DEFAULT_AVAILABILITY.find((r) => r.meetingType === t.value);
+      return {
+        meetingType: t.value,
+        weekdays: untouched && fallback ? [...fallback.weekdays] : [],
+        startMinute: fallback?.startMinute ?? 11 * 60,
+        endMinute: fallback?.endMinute ?? 13 * 60,
+      };
     }),
   );
   const [scheduling, setScheduling] = useState(initialScheduling);
@@ -116,6 +122,12 @@ export function AvailabilityCard({
           Used to suggest dates when you propose a meeting. Leave a row with no days selected and
           it won&apos;t suggest that kind at all.
         </CardDescription>
+        {untouched && (
+          <p className="mt-2 rounded-lg border border-teal-border bg-teal-soft px-3 py-2 text-[13px] text-[#1f6b60]">
+            These are the starting windows, already in use. Change anything that&apos;s wrong and
+            save — nothing here is set in stone.
+          </p>
+        )}
       </CardHeader>
       <CardContent>
         <div className="flex flex-col gap-5">

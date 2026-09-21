@@ -35,6 +35,55 @@ export interface FindSlotsInput {
   now: Date;
 }
 
+/**
+ * The windows a proposal uses before anyone has set their own.
+ *
+ * Scheduling shipped with no defaults and an empty table, which meant the
+ * slot-finder had no rule to work from and returned nothing. The feature was
+ * whole and unreachable: fourteen weeks, zero proposals, and no error anywhere
+ * saying why. A feature that needs a form filled in before it does anything at
+ * all is a feature nobody will discover.
+ *
+ * These are opinions, not facts, and every one of them is wrong for somebody.
+ * They are deliberately unambitious: the middle of the week for meals, because
+ * Monday and Friday are where things get moved to; office visits across the
+ * working day, because a fifteen-minute call-in fits almost anywhere; golf on
+ * a Friday, because that is when it happens. Settings overrides all of it.
+ */
+export const DEFAULT_AVAILABILITY: AvailabilityRule[] = [
+  { meetingType: "lunch", weekdays: [2, 3, 4], startMinute: 11 * 60 + 30, endMinute: 13 * 60 + 30 },
+  { meetingType: "breakfast", weekdays: [2, 3, 4], startMinute: 7 * 60 + 30, endMinute: 9 * 60 },
+  { meetingType: "office_visit", weekdays: [1, 2, 3, 4, 5], startMinute: 9 * 60, endMinute: 16 * 60 },
+  { meetingType: "golf", weekdays: [5], startMinute: 8 * 60, endMinute: 15 * 60 },
+  { meetingType: "general", weekdays: [1, 2, 3, 4, 5], startMinute: 9 * 60, endMinute: 16 * 60 },
+];
+
+/**
+ * The rules to schedule against: whatever is stored, or the defaults when
+ * nothing has ever been stored.
+ *
+ * All or nothing, deliberately. A stored rule set is taken exactly as it is,
+ * including the types missing from it, because a type with no days is how
+ * "never propose golf" is expressed and quietly filling that gap with a
+ * default would override a decision someone made on purpose. Defaults apply
+ * only to an account that has never saved availability at all.
+ */
+export function withDefaultAvailability(
+  stored: readonly AvailabilityRule[],
+): AvailabilityRule[] {
+  const source = stored.length > 0 ? stored : DEFAULT_AVAILABILITY;
+  // The weekday array is copied too, not just the rule around it. A shallow
+  // copy leaves every caller holding the same array as the module constant,
+  // and one of them pushing a day to it would change the defaults for every
+  // request the server handles afterwards.
+  return source.map((r) => ({ ...r, weekdays: [...r.weekdays] }));
+}
+
+/** Whether the rules in play are the defaults rather than a saved choice. */
+export function isUsingDefaultAvailability(stored: readonly AvailabilityRule[]): boolean {
+  return stored.length === 0;
+}
+
 const MS_PER_MINUTE = 60_000;
 const STEP_MINUTES = 30;
 

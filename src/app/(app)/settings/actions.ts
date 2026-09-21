@@ -98,17 +98,18 @@ export async function updateAvailability(
     .eq("user_id", user.id);
   if (clearError) return { error: clearError.message };
 
-  // A type with no days selected simply has no row — that is how "never
-  // propose golf" is stored.
-  const rows = rules
-    .filter((r) => r.weekdays.length > 0)
-    .map((r) => ({
-      user_id: user.id,
-      meeting_type: r.meetingType,
-      weekdays: r.weekdays,
-      start_minute: r.startMinute,
-      end_minute: r.endMinute,
-    }));
+  // Every type gets a row, including the ones with no days selected. An empty
+  // weekday list is how "never propose golf" is stored, and it has to be
+  // stored rather than implied: the absence of all rows now means "never
+  // configured", which is what makes the defaults apply to a new account
+  // without overriding anyone's decision to switch a type off.
+  const rows = rules.map((r) => ({
+    user_id: user.id,
+    meeting_type: r.meetingType,
+    weekdays: r.weekdays,
+    start_minute: r.startMinute,
+    end_minute: r.endMinute,
+  }));
 
   if (rows.length > 0) {
     const { error } = await supabase.from("availability_rules").insert(rows);
