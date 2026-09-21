@@ -300,16 +300,24 @@ export async function getQuickLogLenders(): Promise<QuickLogData> {
 /** Seed the demo workspace for brand-new accounts (spec §14). */
 export async function ensureSampleData(): Promise<void> {
   const supabase = await createClient();
+
+  // The count comes first, and the user lookup only happens on the one load
+  // in an account's life where seeding actually runs.
+  //
+  // It used to be the other way round, which put an `auth.getUser()` — a real
+  // HTTP call to Supabase, not a local token decode — in front of every single
+  // dashboard render, forever, to answer a question that is "no" every time
+  // after the first. RLS already scopes the count to this user, so identifying
+  // them to ask it was work that bought nothing.
+  const { count } = await supabase
+    .from("lenders")
+    .select("id", { count: "exact", head: true });
+  if ((count ?? 0) > 0) return;
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return;
 
-  const { count } = await supabase
-    .from("lenders")
-    .select("id", { count: "exact", head: true });
-
-  if ((count ?? 0) === 0) {
-    await supabase.rpc("create_sample_data", { p_user_id: user.id });
-  }
+  await supabase.rpc("create_sample_data", { p_user_id: user.id });
 }
