@@ -408,12 +408,17 @@ lets it send the actual meeting invitation once a date is agreed.
 
 ## Loose ends
 
-1. **Fix the Site URL in Supabase** (Authentication → URL Configuration). This is a different field
-   from the redirect list and is almost certainly still `http://localhost:3000`. It is the address
-   Supabase builds confirmation and password-reset links from, so until it points at
-   `https://north-chi-three.vercel.app` those emails lead nowhere — which is what broke the login link
-   sent to a coworker. Add the redirect addresses on the same screen while you are there, with the
-   `https://` prefix.
+1. **Fix the Site URL in Supabase** (Authentication → URL Configuration). It is a different field
+   from the redirect list, and as of 21 Sep it still read `https://fable-tracker.vercel.app` — the
+   old project, from before the rename. It is the address Supabase builds confirmation and
+   password-reset links from, so until it points at `https://north-chi-three.vercel.app` those
+   emails lead somewhere else, which is what broke the login link sent to a coworker.
+
+   Add the redirect addresses on the same screen while you are there, with the `https://` prefix:
+   the production host, the team alias `north-imbl.vercel.app`, and the wildcard
+   `https://north-*-imbl.vercel.app/**`. That last one matters because every preview deployment
+   gets its own address, and signing in on one fails without it.
+
 2. **Check your availability** in Settings → *When you can meet*. It starts on sensible windows —
    lunches and breakfasts midweek, office visits across the working day, golf on a Friday — and
    those are live, so proposals work without you touching anything. Change what's wrong and save.

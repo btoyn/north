@@ -212,9 +212,10 @@ Genuinely undecided. Do not resolve these unilaterally.
 
 ## 8. Loose ends he needs to do himself
 
-1. **Supabase Site URL** is almost certainly still `http://localhost:3000`. It is a *different
-   field* from the redirect list, and it is what confirmation and password-reset links are built
-   from — this is what broke a login link sent to a coworker.
+1. **Supabase Site URL** still points at `fable-tracker.vercel.app`, the project from before the
+   rename. It is a *different field* from the redirect list, and it is what confirmation and
+   password-reset links are built from — this is what broke a login link sent to a coworker. The
+   redirect list needs the preview wildcard too, or signing in on a preview build fails.
 2. **Check availability** in Settings. Defaults are in use until something is saved.
 3. **Add an email signature** in Settings. Blank, so every loan's first draft has no sign-off.
 4. **12 lenders have no email address** and cannot receive a proposal or an update.
