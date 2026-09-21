@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -13,6 +13,7 @@ import {
   MessageSquare,
   Phone,
   Search,
+  Undo2,
   Utensils,
   X,
 } from "lucide-react";
@@ -21,7 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Input, Label, Select } from "@/components/ui/input";
 import { matchScore } from "@/lib/fuzzy";
 import { cn, relativeDays } from "@/lib/utils";
-import { quickLogTouch } from "@/app/(app)/activity-actions";
+import { quickLogTouch, undoQuickLog } from "@/app/(app)/activity-actions";
 import type { QuickLogData, QuickLogLender } from "@/lib/data";
 
 /** The handful of things actually logged ad hoc. Call leads — it's the common one. */
@@ -33,6 +34,14 @@ const TYPES = [
   { value: "breakfast", label: "Coffee", icon: Coffee },
   { value: "pop_in", label: "Pop-in", icon: DoorOpen },
 ] as const;
+
+type ActivityType = (typeof TYPES)[number];
+
+/** What a finished save hands back so the toast can name it and take it back. */
+interface Logged {
+  activityId?: string;
+  label: string;
+}
 
 function localNow(): string {
   const now = new Date();
@@ -49,13 +58,22 @@ export function QuickLog({
   children: (open: () => void) => React.ReactNode;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [logged, setLogged] = useState<Logged | null>(null);
   const triggerWrap = useRef<HTMLSpanElement>(null);
 
   /** Send focus back to the trigger on close, so keyboard users don't lose their place. */
-  function close() {
+  const close = useCallback(() => {
     setIsOpen(false);
     triggerWrap.current?.querySelector<HTMLElement>("button, a")?.focus();
-  }
+  }, []);
+
+  const onLogged = useCallback(
+    (result: Logged) => {
+      setLogged(result);
+      close();
+    },
+    [close],
+  );
 
   return (
     <>
@@ -63,16 +81,87 @@ export function QuickLog({
       <span ref={triggerWrap} className="contents">
         {children(() => setIsOpen(true))}
       </span>
-      {isOpen && <Sheet data={data} onClose={close} />}
+      {isOpen && <Sheet data={data} onClose={close} onLogged={onLogged} />}
+      {logged && <UndoBar logged={logged} onDismiss={() => setLogged(null)} />}
     </>
   );
 }
 
-function Sheet({ data, onClose }: { data: QuickLogData; onClose: () => void }) {
+/**
+ * The price of committing on the second tap: a mis-tap has to be takeable-back
+ * without hunting for the row. Sits above the mobile tab bar, gone in ten
+ * seconds.
+ */
+function UndoBar({ logged, onDismiss }: { logged: Logged; onDismiss: () => void }) {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const t = setTimeout(onDismiss, 10_000);
+    return () => clearTimeout(t);
+  }, [logged, onDismiss]);
+
+  function undo() {
+    if (!logged.activityId) return;
+    setError(null);
+    startTransition(async () => {
+      const result = await undoQuickLog(logged.activityId!);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      router.refresh();
+      onDismiss();
+    });
+  }
+
+  return (
+    <div
+      role="status"
+      className="animate-row-settle fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+72px)] z-40 mx-auto flex w-[min(100%-1.5rem,420px)] items-center gap-3 rounded-[14px] border border-border bg-surface px-4 py-3 shadow-[0_12px_32px_rgba(16,24,40,0.22)] sm:bottom-6"
+    >
+      <Check className="h-4 w-4 shrink-0 text-[#1f6b60]" />
+      <p className="min-w-0 flex-1 truncate text-[13.5px] font-medium">
+        {error ?? `${logged.label} logged`}
+      </p>
+      {logged.activityId && !error && (
+        <button
+          onClick={undo}
+          disabled={pending}
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2 py-1 text-[13.5px] font-semibold text-primary transition-colors hover:bg-primary-soft disabled:opacity-50"
+        >
+          <Undo2 className="h-3.5 w-3.5" />
+          {pending ? "Undoing…" : "Undo"}
+        </button>
+      )}
+      <button
+        onClick={onDismiss}
+        aria-label="Dismiss"
+        className="shrink-0 rounded-lg p-1 text-muted transition-colors hover:bg-black/[0.05] hover:text-foreground"
+      >
+        <X className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  );
+}
+
+function Sheet({
+  data,
+  onClose,
+  onLogged,
+}: {
+  data: QuickLogData;
+  onClose: () => void;
+  onLogged: (result: Logged) => void;
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<QuickLogLender | null>(null);
+  /** Step 2 defaults to the six tiles; the full form is opt-in. */
+  const [showDetails, setShowDetails] = useState(false);
+  const [saving, setSaving] = useState<string | null>(null);
   const [showPromise, setShowPromise] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedCount, setSavedCount] = useState(0);
@@ -121,16 +210,59 @@ function Sheet({ data, onClose }: { data: QuickLogData; onClose: () => void }) {
       .map((r) => r.lender);
   }, [query, data.lenders, data.suggestedIds, byId]);
 
+  function pick(lender: QuickLogLender) {
+    setSelected(lender);
+    setShowDetails(false);
+    setError(null);
+  }
+
+  function back() {
+    setSelected(null);
+    setShowDetails(false);
+    setShowPromise(false);
+    setError(null);
+  }
+
+  /**
+   * The two-tap path: person, kind, done. Occurred-at is left off so the server
+   * stamps now, which is the truth in every case this path is for — the ones
+   * you're backdating go through Details.
+   */
+  function quickSave(type: ActivityType) {
+    if (!selected || pending) return;
+    const lender = selected;
+    setError(null);
+    setSaving(type.value);
+    startTransition(async () => {
+      const result = await quickLogTouch({
+        lenderId: lender.id,
+        activityType: type.value,
+      });
+      setSaving(null);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      router.refresh();
+      onLogged({
+        activityId: result.activityId,
+        label: `${type.label} with ${lender.name.split(" ")[0]}`,
+      });
+    });
+  }
+
   function submit(form: HTMLFormElement, keepOpen: boolean) {
     if (!selected) return;
     const f = new FormData(form);
     const description = String(f.get("promise") ?? "").trim();
+    const lender = selected;
+    const kind = String(f.get("kind"));
 
     setError(null);
     startTransition(async () => {
       const result = await quickLogTouch({
-        lenderId: selected.id,
-        activityType: String(f.get("kind")),
+        lenderId: lender.id,
+        activityType: kind,
         occurredAt: String(f.get("occurredAt") ?? ""),
         summary: String(f.get("summary") ?? ""),
         initiatedByLender: f.get("inbound") === "on",
@@ -149,15 +281,17 @@ function Sheet({ data, onClose }: { data: QuickLogData; onClose: () => void }) {
       }
 
       router.refresh();
-      setSavedCount((n) => n + 1);
-      setJustSaved(selected.name);
 
       if (keepOpen) {
-        setSelected(null);
-        setQuery("");
-        setShowPromise(false);
+        setSavedCount((n) => n + 1);
+        setJustSaved(lender.name);
+        back();
       } else {
-        onClose();
+        const label = TYPES.find((t) => t.value === kind)?.label ?? "Touch";
+        onLogged({
+          activityId: result.activityId,
+          label: `${label} with ${lender.name.split(" ")[0]}`,
+        });
       }
     });
   }
@@ -181,7 +315,7 @@ function Sheet({ data, onClose }: { data: QuickLogData; onClose: () => void }) {
         <div className="flex items-center gap-3 border-b border-border px-5 py-4">
           {selected && (
             <button
-              onClick={() => setSelected(null)}
+              onClick={back}
               aria-label="Back to lender list"
               className="-ml-1 rounded-lg p-1.5 text-muted transition-colors hover:bg-black/[0.05] hover:text-foreground"
             >
@@ -253,7 +387,7 @@ function Sheet({ data, onClose }: { data: QuickLogData; onClose: () => void }) {
                   {results.map((lender) => (
                     <li key={lender.id}>
                       <button
-                        onClick={() => setSelected(lender)}
+                        onClick={() => pick(lender)}
                         className="flex w-full items-center gap-3 px-5 py-2.5 text-left transition-colors hover:bg-primary-soft/60"
                       >
                         <Avatar name={lender.name} size="md" />
@@ -288,8 +422,63 @@ function Sheet({ data, onClose }: { data: QuickLogData; onClose: () => void }) {
               )}
             </div>
           </div>
+        ) : !showDetails ? (
+          /* Step 2 — one tap finishes it */
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <div className="flex flex-col gap-4 px-5 py-4">
+              <div className="flex items-center gap-3 rounded-xl border border-border bg-background p-3">
+                <Avatar name={selected.name} size="md" />
+                <div className="min-w-0">
+                  <p className="truncate text-[14px] font-semibold">{selected.name}</p>
+                  <p className="text-[12.5px] text-muted">
+                    {selected.institution ?? "No institution"} · last spoke{" "}
+                    {relativeDays(selected.lastTouchAt)}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <p className="mb-2 text-[13px] font-medium">What happened? Tap to save.</p>
+                <div className="grid grid-cols-3 gap-2.5">
+                  {TYPES.map((t) => (
+                    <button
+                      key={t.value}
+                      type="button"
+                      onClick={() => quickSave(t)}
+                      disabled={pending}
+                      aria-busy={saving === t.value}
+                      className={cn(
+                        "flex flex-col items-center justify-center gap-1.5 rounded-[14px] border border-border bg-background py-4 text-[13.5px] font-semibold transition-colors",
+                        "hover:border-primary/50 hover:bg-primary-soft hover:text-primary",
+                        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+                        saving === t.value && "border-primary bg-primary-soft text-primary",
+                        pending && saving !== t.value && "opacity-50",
+                      )}
+                    >
+                      <t.icon className="h-5 w-5" />
+                      {saving === t.value ? "Saving…" : t.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-2 text-[12px] text-muted">
+                  Saves it as right now. You can undo straight after.
+                </p>
+              </div>
+
+              {error && <p className="text-[13.5px] text-danger">{error}</p>}
+
+              <button
+                type="button"
+                onClick={() => setShowDetails(true)}
+                disabled={pending}
+                className="self-start text-[13.5px] font-semibold text-primary hover:underline disabled:opacity-50"
+              >
+                Add a summary, backdate it, or catch a promise →
+              </button>
+            </div>
+          </div>
         ) : (
-          /* Step 2 — what happened */
+          /* Step 2, the long way — everything the tiles leave out */
           <form
             className="min-h-0 flex-1 overflow-y-auto"
             onSubmit={(e) => {
@@ -313,11 +502,7 @@ function Sheet({ data, onClose }: { data: QuickLogData; onClose: () => void }) {
                 <legend className="mb-1.5 text-[13px] font-medium">What happened?</legend>
                 <div className="flex flex-wrap gap-2">
                   {TYPES.map((t, i) => (
-                    <label
-                      key={t.value}
-                      className="cursor-pointer"
-                      title={t.label}
-                    >
+                    <label key={t.value} className="cursor-pointer" title={t.label}>
                       <input
                         type="radio"
                         name="kind"

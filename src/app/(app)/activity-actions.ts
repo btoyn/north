@@ -16,7 +16,9 @@ export interface LogActivityInput {
 
 /** Log a touch on the unified timeline (spec §8). Coverage flags derive from
  *  the §9 rules so screens never re-derive them inconsistently. */
-export async function logActivity(input: LogActivityInput): Promise<{ error?: string }> {
+export async function logActivity(
+  input: LogActivityInput,
+): Promise<{ activityId?: string; error?: string }> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -29,20 +31,26 @@ export async function logActivity(input: LogActivityInput): Promise<{ error?: st
     .eq("id", input.lenderId)
     .single();
 
-  const { error } = await supabase.from("activities").insert({
-    user_id: user.id,
-    lender_id: input.lenderId,
-    institution_id: lender?.institution_id ?? null,
-    activity_type: input.activityType,
-    direction: input.direction ?? (input.initiatedByLender ? "inbound" : "outbound"),
-    occurred_at: input.occurredAt ? new Date(input.occurredAt).toISOString() : new Date().toISOString(),
-    subject: input.subject?.trim() || null,
-    summary: input.summary?.trim() || null,
-    personal_touch: isPersonalTouch(input.activityType),
-    counts_for_coverage: COVERAGE_ACTIVITY_TYPES.has(input.activityType),
-    initiated_by_lender: input.initiatedByLender ?? false,
-    source: "manual",
-  });
+  const { data: inserted, error } = await supabase
+    .from("activities")
+    .insert({
+      user_id: user.id,
+      lender_id: input.lenderId,
+      institution_id: lender?.institution_id ?? null,
+      activity_type: input.activityType,
+      direction: input.direction ?? (input.initiatedByLender ? "inbound" : "outbound"),
+      occurred_at: input.occurredAt
+        ? new Date(input.occurredAt).toISOString()
+        : new Date().toISOString(),
+      subject: input.subject?.trim() || null,
+      summary: input.summary?.trim() || null,
+      personal_touch: isPersonalTouch(input.activityType),
+      counts_for_coverage: COVERAGE_ACTIVITY_TYPES.has(input.activityType),
+      initiated_by_lender: input.initiatedByLender ?? false,
+      source: "manual",
+    })
+    .select("id")
+    .single();
   if (error) return { error: error.message };
 
   // Reaching out closes the loop on this week's plan, so the dashboard's
@@ -67,7 +75,7 @@ export async function logActivity(input: LogActivityInput): Promise<{ error?: st
   revalidatePath(`/lenders/${input.lenderId}`);
   revalidatePath("/spheres", "layout");
   revalidatePath("/dashboard");
-  return {};
+  return { activityId: inserted.id };
 }
 
 /** Monday of the current week, matching the weekly plan key. */
@@ -95,7 +103,7 @@ export async function quickLogTouch(input: {
     description: string;
     dueAt?: string;
   };
-}): Promise<{ error?: string }> {
+}): Promise<{ activityId?: string; error?: string }> {
   if (!input.lenderId) return { error: "Pick a lender first." };
 
   const logged = await logActivity({
@@ -117,10 +125,72 @@ export async function quickLogTouch(input: {
     // The touch is already saved, so surface the promise failure without
     // pretending the whole thing failed.
     if (promised.error) {
-      return { error: `Touch saved, but the promise didn't: ${promised.error}` };
+      return {
+        activityId: logged.activityId,
+        error: `Touch saved, but the promise didn't: ${promised.error}`,
+      };
     }
   }
 
+  return { activityId: logged.activityId };
+}
+
+/**
+ * Takes back a touch that was logged by tapping the wrong thing.
+ *
+ * The two-tap path commits the moment a kind is chosen, which is the whole
+ * point of it, so the mis-tap has to be recoverable or the speed is bought
+ * with a worse problem. Soft delete, like every other removal here — Trash
+ * holds it.
+ */
+export async function undoQuickLog(activityId: string): Promise<{ error?: string }> {
+  const supabase = await createClient();
+
+  const { data: activity } = await supabase
+    .from("activities")
+    .select("lender_id, activity_type, occurred_at")
+    .eq("id", activityId)
+    .single();
+
+  const { error } = await supabase
+    .from("activities")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", activityId);
+  if (error) return { error: error.message };
+
+  // logActivity ticks this week's plan item when a personal touch lands, so undo
+  // has to untick it — but only if nothing else this week still covers the
+  // lender, or a real touch gets erased along with the mis-tap.
+  if (activity && isPersonalTouch(activity.activity_type)) {
+    const weekStart = currentWeekStart();
+    const { count } = await supabase
+      .from("activities")
+      .select("id", { count: "exact", head: true })
+      .eq("lender_id", activity.lender_id)
+      .in("activity_type", [...COVERAGE_ACTIVITY_TYPES].filter(isPersonalTouch))
+      .gte("occurred_at", new Date(`${weekStart}T00:00:00`).toISOString())
+      .is("deleted_at", null);
+
+    if (!count) {
+      const { data: plan } = await supabase
+        .from("weekly_relationship_plans")
+        .select("id")
+        .eq("week_start", weekStart)
+        .maybeSingle();
+      if (plan) {
+        await supabase
+          .from("weekly_relationship_plan_items")
+          .update({ status: "open", completed_at: null })
+          .eq("plan_id", plan.id)
+          .eq("lender_id", activity.lender_id)
+          .eq("status", "completed");
+      }
+    }
+  }
+
+  // The touch could have moved coverage, the weekly plan, and a lender page at
+  // once. Undo is rare enough that the blunt instrument is the right one.
+  revalidatePath("/", "layout");
   return {};
 }
 
