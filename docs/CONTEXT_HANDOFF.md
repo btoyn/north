@@ -33,9 +33,9 @@ These are not preferences to be polite about — they were stated directly and r
 |---|---|
 | Framework | **Next.js 16.3.0**, App Router, React 19.2, Turbopack, TypeScript |
 | Styling | **Tailwind CSS v4** with `@theme inline` custom properties in `src/app/globals.css` |
-| Database | **Supabase** Postgres, project `oflcbdnidtbqbwzpmvgp` ("lender-crm") |
+| Database | **Supabase** Postgres, project `oflcbdnidtbqbwzpmvgp` ("lender-crm"), region `us-west-2` |
 | Auth | Supabase Auth, email + password, publishable (`sb_publishable_…`) keys |
-| Hosting | **Vercel**, project `north` (`prj_epKWAZtO4PAIA3DSrxmxH1xyUmsV`), team `imbl` |
+| Hosting | **Vercel**, project `north` (`prj_epKWAZtO4PAIA3DSrxmxH1xyUmsV`), team `imbl`, functions pinned to `pdx1` to sit beside the database |
 | Live at | `north-chi-three.vercel.app` |
 | Repo | `btoyn/north`, default branch `main` |
 | Tests | **Vitest**, 117 tests across 8 files, all pure logic |
