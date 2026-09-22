@@ -85,7 +85,7 @@ never reach anything you could not reach yourself:
 | `offline_access` | Stays connected past the first hour | — |
 | `User.Read` | Shows which account is connected | Read anyone else's profile |
 | `Calendars.ReadWrite` | Real free/busy; the invite when you press Confirm | Touch another person's calendar |
-| `Mail.ReadWrite` | Reads replies to its own asks; leaves drafts in Outlook | Send anything |
+| `Mail.ReadWrite` | Reads sender, date and subject to log mail with known lenders; leaves drafts in Outlook | Read message bodies, or send anything |
 | `Mail.Send` | Sending directly, if you ever switch it on | Nothing calls this today |
 
 You can revoke the whole thing at any time from

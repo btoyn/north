@@ -10,6 +10,9 @@ import { SettingsForm } from "./settings-form";
 import { AvailabilityCard } from "./availability-card";
 import { InvitesCard } from "./invites-card";
 import { MicrosoftCard } from "./microsoft-card";
+import { MailScanCard } from "./mail-scan-card";
+import { getConnection } from "@/lib/microsoft/tokens";
+import { SCOPE_FOR, scopeSatisfied } from "@/lib/microsoft/config";
 import { listInvites } from "./invite-actions";
 
 export const metadata = { title: "Settings" };
@@ -21,13 +24,25 @@ export default async function SettingsPage({
 }) {
   const { microsoft: microsoftResult } = await searchParams;
   const supabase = await createClient();
-  const [{ data: profile }, { data: prefs }, { data: availability }, inviteResult] = await Promise.all([
+  const [
+    { data: profile },
+    { data: prefs },
+    { data: availability },
+    inviteResult,
+    { data: mailState },
+    connection,
+  ] = await Promise.all([
     supabase.from("users").select("*").maybeSingle(),
     supabase.from("user_preferences").select("*").maybeSingle(),
     supabase
       .from("availability_rules")
       .select("meeting_type, weekdays, start_minute, end_minute"),
     listInvites(),
+    supabase
+      .from("mail_sync_state")
+      .select("last_run_at, last_result, last_logged_count, last_synced_at")
+      .maybeSingle(),
+    getConnection(),
   ]);
   const flags = getFlags();
 
@@ -70,6 +85,20 @@ export default async function SettingsPage({
         />
 
         <MicrosoftCard result={microsoftResult} />
+
+        <MailScanCard
+          state={{
+            available: Boolean(
+              connection &&
+                !connection.invalidatedAt &&
+                scopeSatisfied(connection.scopes, SCOPE_FOR.readMail),
+            ),
+            lastRunAt: mailState?.last_run_at ?? null,
+            lastResult: mailState?.last_result ?? null,
+            lastLoggedCount: mailState?.last_logged_count ?? 0,
+            everSynced: Boolean(mailState?.last_synced_at),
+          }}
+        />
 
         {/* Only the workspace admin gets this — listInvites errors for everyone else. */}
         {inviteResult.invites && <InvitesCard initialInvites={inviteResult.invites} />}

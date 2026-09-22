@@ -1,6 +1,7 @@
 import "server-only";
 import { GRAPH_BASE, SCOPE_FOR, scopeSatisfied } from "./config";
 import { getAccessToken } from "./tokens";
+import type { MailMessage } from "@/lib/mail-match";
 import {
   busyBlocksFromSchedule,
   mergeBusyBlocks,
@@ -219,4 +220,89 @@ export async function getMicrosoftProfile(
   } catch {
     return { email: null, id: null };
   }
+}
+
+interface GraphRecipient {
+  emailAddress?: { address?: string };
+}
+
+interface GraphMessage {
+  id?: string;
+  subject?: string | null;
+  sentDateTime?: string;
+  receivedDateTime?: string;
+  isDraft?: boolean;
+  from?: GraphRecipient;
+  sender?: GraphRecipient;
+  toRecipients?: GraphRecipient[];
+  ccRecipients?: GraphRecipient[];
+}
+
+const address = (r: GraphRecipient | undefined): string | null =>
+  r?.emailAddress?.address ?? null;
+
+const addresses = (list: GraphRecipient[] | undefined): string[] =>
+  (list ?? []).map(address).filter((a): a is string => Boolean(a));
+
+export interface ListMessagesResult {
+  messages: MailMessage[];
+  ok: boolean;
+  failure?: GraphFailure;
+  detail?: string;
+}
+
+/**
+ * Message headers since a given instant, across the whole mailbox.
+ *
+ * `$select` is the privacy control, not an optimisation: body and bodyPreview
+ * are never named, so the message text is not fetched, cannot be logged by
+ * accident, and never crosses the wire into this app at all. What comes back
+ * is who, when, and the subject line.
+ *
+ * Paging is followed to a hard cap. A first sync over a busy mailbox should
+ * take a few pages; anything wildly beyond that means a filter has gone wrong,
+ * and a bounded wrong answer is easier to notice and recover from than an
+ * unbounded one.
+ */
+export async function listMessagesSince(
+  since: Date,
+  maxPages = 20,
+): Promise<ListMessagesResult> {
+  const select = "id,subject,sentDateTime,receivedDateTime,isDraft,from,sender,toRecipients,ccRecipients";
+  let path =
+    `/me/messages?$select=${select}` +
+    `&$filter=receivedDateTime ge ${since.toISOString()}` +
+    `&$orderby=receivedDateTime desc&$top=100`;
+
+  const messages: MailMessage[] = [];
+
+  for (let page = 0; page < maxPages; page++) {
+    const result = await graphFetch(path, { scope: SCOPE_FOR.readMail });
+    if (!result.ok) {
+      // Whatever came back before the failure is still true, so it is kept and
+      // the caller is told the sweep was partial.
+      return { messages, ok: false, failure: result.failure, detail: result.detail };
+    }
+
+    const body = result.data as { value?: GraphMessage[]; "@odata.nextLink"?: string };
+    for (const m of body.value ?? []) {
+      if (!m.id) continue;
+      messages.push({
+        id: m.id,
+        subject: m.subject ?? null,
+        sentAt: m.sentDateTime ?? m.receivedDateTime ?? new Date().toISOString(),
+        from: address(m.from) ?? address(m.sender),
+        toRecipients: addresses(m.toRecipients),
+        ccRecipients: addresses(m.ccRecipients),
+        isDraft: m.isDraft ?? false,
+      });
+    }
+
+    const next = body["@odata.nextLink"];
+    if (!next) return { messages, ok: true };
+    // nextLink is absolute; graphFetch wants a path.
+    path = next.startsWith(GRAPH_BASE) ? next.slice(GRAPH_BASE.length) : next;
+  }
+
+  return { messages, ok: true, detail: "stopped at the page cap" };
 }

@@ -24,6 +24,7 @@ export const SCOPE_FOR = {
   createEvent: "Calendars.ReadWrite",
   sendMail: "Mail.Send",
   draftMail: "Mail.ReadWrite",
+  readMail: "Mail.Read",
 } as const;
 
 /**

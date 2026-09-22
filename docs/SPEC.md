@@ -212,7 +212,7 @@ Brandon, personally, for four delegated permissions:
 | Permission | What it lets North do | What it does NOT do |
 |---|---|---|
 | `Calendars.ReadWrite` | See when he's busy; create the confirmed meeting | Touch anyone else's calendar |
-| `Mail.ReadWrite` | Read replies to its own asks; leave drafts in his Outlook | Send anything |
+| `Mail.ReadWrite` | Read sender, date and subject to log mail with known lenders; leave drafts in his Outlook | Read message bodies, or send anything |
 | `Mail.Send` | Send, if he ever turns that on | Nothing is sent today — the code path exists and is uncalled |
 | `offline_access` | Stay connected past one hour | — |
 
