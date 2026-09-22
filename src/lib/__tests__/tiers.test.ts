@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { coverageStatus } from "../coverage";
-import { TIER_GOAL_DAYS, countsAsTouch, readTier, summarizeTiers, tierGoalDays } from "../tiers";
+import {
+  TIER_GOAL_DAYS,
+  countsAsTouch,
+  isDealOnly,
+  qualifyingTouchAt,
+  readTier,
+  summarizeTiers,
+  tierGoalDays,
+} from "../tiers";
 
 const NOW = new Date("2026-09-17T12:00:00Z");
 const daysAgo = (n: number) => new Date(NOW.getTime() - n * 86_400_000);
@@ -128,5 +136,92 @@ describe("summarizeTiers", () => {
     const summary = summarizeTiers([]);
     expect(summary.map((s) => s.tier)).toEqual(["A", "B", "C", "D", "unassigned"]);
     expect(summary.every((s) => s.total === 0 && s.pct === 0)).toBe(true);
+  });
+});
+
+describe("the weekly loan update", () => {
+  const iso = (n: number) => daysAgo(n).toISOString();
+
+  it("restarts the clock for every tier, not just C and D", () => {
+    for (const tier of ["A", "B", "C", "D"]) {
+      expect(countsAsTouch("loan_update", tier)).toBe(true);
+    }
+  });
+
+  it("still leaves a plain sent email not counting for A and B", () => {
+    expect(countsAsTouch("personal_email", "A")).toBe(false);
+    expect(countsAsTouch("personal_email", "C")).toBe(true);
+  });
+
+  it("never rescues a campaign blast", () => {
+    for (const tier of ["A", "B", "C", "D"]) {
+      expect(countsAsTouch("campaign_email", tier)).toBe(false);
+    }
+  });
+
+  it("is what A and B are judged on when it is the most recent thing", () => {
+    expect(
+      qualifyingTouchAt("A", {
+        personal: iso(2),
+        conversation: iso(60),
+        dealUpdate: iso(3),
+      }),
+    ).toBe(iso(3));
+  });
+
+  it("does not pull the clock backwards when a real conversation is newer", () => {
+    expect(
+      qualifyingTouchAt("A", {
+        personal: iso(1),
+        conversation: iso(4),
+        dealUpdate: iso(20),
+      }),
+    ).toBe(iso(4));
+  });
+
+  it("leaves C and D on the any-contact clock", () => {
+    expect(
+      qualifyingTouchAt("C", { personal: iso(5), conversation: iso(90), dealUpdate: iso(40) }),
+    ).toBe(iso(5));
+  });
+});
+
+describe("isDealOnly", () => {
+  const iso = (n: number) => daysAgo(n).toISOString();
+
+  it("flags an A lender carried entirely by the Friday email", () => {
+    expect(
+      isDealOnly("A", { personal: iso(3), conversation: iso(200), dealUpdate: iso(3) }, 30, NOW),
+    ).toBe(true);
+  });
+
+  it("clears once they actually talk", () => {
+    expect(
+      isDealOnly("A", { personal: iso(3), conversation: iso(10), dealUpdate: iso(3) }, 30, NOW),
+    ).toBe(false);
+  });
+
+  it("says nothing about a lender with no loan running", () => {
+    expect(
+      isDealOnly("A", { personal: iso(3), conversation: iso(3), dealUpdate: null }, 30, NOW),
+    ).toBe(false);
+  });
+
+  it("stays quiet for someone already overdue, who is on the list anyway", () => {
+    expect(
+      isDealOnly("A", { personal: iso(80), conversation: iso(200), dealUpdate: iso(80) }, 30, NOW),
+    ).toBe(false);
+  });
+
+  it("counts any contact for C, so a call clears it even though C never needed one", () => {
+    expect(
+      isDealOnly("C", { personal: iso(2), conversation: iso(2), dealUpdate: iso(10) }, 90, NOW),
+    ).toBe(false);
+  });
+
+  it("flags a C lender whose only contact all quarter was the loan email", () => {
+    expect(
+      isDealOnly("C", { personal: iso(10), conversation: null, dealUpdate: iso(10) }, 90, NOW),
+    ).toBe(true);
   });
 });

@@ -38,6 +38,7 @@ const row = (id: string): SphereRow =>
     },
     hasActiveLoan: false,
     hasOverduePromise: false,
+    dealOnly: false,
   }) satisfies SphereRow;
 
 describe("list keys", () => {

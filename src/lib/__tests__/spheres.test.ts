@@ -34,6 +34,7 @@ function row(
     },
     hasActiveLoan: false,
     hasOverduePromise: false,
+    dealOnly: false,
     ...rest,
   };
 }

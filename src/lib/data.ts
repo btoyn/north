@@ -1,7 +1,7 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { lenderCoverage, type LenderCoverageResult } from "@/lib/coverage";
-import { qualifyingTouchAt, readTier, tierGoalDays } from "@/lib/tiers";
+import { isDealOnly, qualifyingTouchAt, readTier, tierGoalDays } from "@/lib/tiers";
 import { sortLists, type LenderList } from "@/lib/lists";
 import type { SphereRow } from "@/lib/spheres";
 import type { CoverageRow, Lender, UserPreferences } from "@/lib/types";
@@ -9,6 +9,8 @@ import type { CoverageRow, Lender, UserPreferences } from "@/lib/types";
 export interface LenderWithCoverage extends Lender {
   institution: { id: string; name: string } | null;
   coverage: LenderCoverageResult;
+  /** Covered, but only by the weekly update on their borrower. */
+  dealOnly: boolean;
 }
 
 export async function getPreferences(): Promise<UserPreferences | null> {
@@ -47,19 +49,23 @@ export async function getLendersWithCoverage(): Promise<LenderWithCoverage[]> {
   return ((lenders ?? []) as unknown as (Lender & { institution: { id: string; name: string } | null })[]).map(
     (l) => {
       const c = coverageByLender.get(l.id);
+      const touches = {
+        personal: c?.last_personal_touch_at ?? null,
+        conversation: c?.last_conversation_at ?? null,
+        dealUpdate: c?.last_deal_update_at ?? null,
+      };
+      const goalDays = tierGoalDays(l.relationship_tier, workspaceGoal);
       return {
         ...l,
         coverage: lenderCoverage(
           {
             lastVisibleTouchAt: c?.last_visible_touch_at ?? null,
-            lastPersonalTouchAt: qualifyingTouchAt(l.relationship_tier, {
-              personal: c?.last_personal_touch_at ?? null,
-              conversation: c?.last_conversation_at ?? null,
-            }),
+            lastPersonalTouchAt: qualifyingTouchAt(l.relationship_tier, touches),
             hasConfirmedFutureMeeting: c?.has_confirmed_future_meeting ?? false,
           },
-          { goalDays: tierGoalDays(l.relationship_tier, workspaceGoal), graceDays },
+          { goalDays, graceDays },
         ),
+        dealOnly: isDealOnly(l.relationship_tier, touches, goalDays),
       };
     },
   );
@@ -108,6 +114,7 @@ export async function getSphereRows(): Promise<SphereRow[]> {
     },
     hasActiveLoan: loanLenders.has(l.id),
     hasOverduePromise: promiseLenders.has(l.id),
+    dealOnly: l.dealOnly,
   }));
 }
 
@@ -193,6 +200,7 @@ export async function getNavCounts(): Promise<NavCounts> {
           lastPersonalTouchAt: qualifyingTouchAt(l.relationship_tier, {
             personal: c?.last_personal_touch_at ?? null,
             conversation: c?.last_conversation_at ?? null,
+            dealUpdate: c?.last_deal_update_at ?? null,
           }),
           hasConfirmedFutureMeeting: c?.has_confirmed_future_meeting ?? false,
         },

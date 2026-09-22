@@ -32,6 +32,8 @@ export interface SphereListLender {
   /** Any touch, campaign included — drives the group's last-touch line. */
   daysSinceVisible: number | null;
   coverageStatus: CoverageStatus;
+  /** Inside their window on the weekly loan update alone. */
+  dealOnly: boolean;
 }
 
 /** Adds the lender to the current URL, keeping the search and the sphere. */
@@ -73,6 +75,7 @@ export function FlatLenderList({ lenders }: { lenders: SphereListLender[] }) {
                 <div className="flex items-center gap-2">
                   <span className="font-medium">{l.fullName}</span>
                   {l.isSample && <SampleBadge />}
+                  {l.dealOnly && <DealOnlyBadge />}
                 </div>
                 <p className="truncate text-sm text-muted">
                   {[l.institution, l.title, l.territory].filter(Boolean).join(" · ")}
@@ -213,5 +216,23 @@ export function GroupedLenderList({
         </section>
       ))}
     </div>
+  );
+}
+
+/**
+ * Marks a lender the Friday email is carrying on its own.
+ *
+ * Deliberately quiet: they are covered, so this is a note rather than a
+ * warning. It sits beside the name so it reads as something true about the
+ * relationship, not as a job on a list.
+ */
+function DealOnlyBadge() {
+  return (
+    <span
+      title="Covered by the weekly loan update and nothing else"
+      className="shrink-0 rounded-full border border-plum-border bg-plum-soft px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-plum"
+    >
+      Deal only
+    </span>
   );
 }

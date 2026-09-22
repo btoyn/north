@@ -35,6 +35,8 @@ export interface SphereRow {
   };
   hasActiveLoan: boolean;
   hasOverduePromise: boolean;
+  /** Inside their window, but only because of the weekly loan update. */
+  dealOnly: boolean;
 }
 
 export type SphereGroup =
@@ -133,6 +135,15 @@ export const SPHERES: SphereDef[] = [
     match: (row) =>
       row.coverage.visible === "on_track" &&
       !["on_track", "grace"].includes(row.coverage.personal),
+    sort: worstFirst,
+  },
+  {
+    key: "deal-email-only",
+    label: "Deal email only",
+    description: "Covered by the weekly loan update and nothing else",
+    group: "Attention",
+    layout: "flat",
+    match: (row) => row.dealOnly,
     sort: worstFirst,
   },
   {

@@ -95,6 +95,7 @@ export interface CoverageRow {
   last_personal_touch_at: string | null;
   /** Only what someone else took part in — the bar A and B are held to. */
   last_conversation_at: string | null;
+  last_deal_update_at: string | null;
   has_confirmed_future_meeting: boolean;
 }
 

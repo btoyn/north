@@ -77,6 +77,7 @@ export default async function SpherePage({
     daysSincePersonal: row.coverage.daysSincePersonal,
     daysSinceVisible: row.coverage.daysSinceVisible,
     coverageStatus: row.coverage.personal,
+    dealOnly: row.dealOnly,
   }));
 
   const grouped = sphere.layout === "grouped" && !q;
