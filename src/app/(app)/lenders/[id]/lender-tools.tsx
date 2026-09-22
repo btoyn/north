@@ -45,6 +45,10 @@ interface LenderSummary {
   first_name: string;
   email: string | null;
   mobile_phone: string | null;
+  office_phone: string | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
   relationship_tier: string;
   relationship_health: string | null;
   communication_style: string | null;
@@ -256,6 +260,10 @@ export function LenderTools({
                   territory: String(f.get("territory")) || null,
                   email: String(f.get("email")) || null,
                   mobile_phone: String(f.get("mobile")) || null,
+                  office_phone: String(f.get("office")) || null,
+                  address: String(f.get("address")) || null,
+                  city: String(f.get("city")) || null,
+                  state: String(f.get("state")) || null,
                 }),
               );
             }}
@@ -268,6 +276,7 @@ export function LenderTools({
                   <option value="A">A</option>
                   <option value="B">B</option>
                   <option value="C">C</option>
+                  <option value="D">D</option>
                   <option value="unassigned">No tier</option>
                 </Select>
               </div>
@@ -313,6 +322,28 @@ export function LenderTools({
               <div>
                 <Label>Mobile</Label>
                 <Input name="mobile" type="tel" defaultValue={lender.mobile_phone ?? ""} />
+              </div>
+            </div>
+            <div>
+              <Label>Office phone</Label>
+              <Input name="office" type="tel" defaultValue={lender.office_phone ?? ""} />
+            </div>
+            <div>
+              <Label>Address</Label>
+              <Input
+                name="address"
+                defaultValue={lender.address ?? ""}
+                placeholder="Street, if you visit them there"
+              />
+            </div>
+            <div className="grid grid-cols-[minmax(0,1fr)_88px] gap-2">
+              <div>
+                <Label>City</Label>
+                <Input name="city" defaultValue={lender.city ?? ""} />
+              </div>
+              <div>
+                <Label>State</Label>
+                <Input name="state" maxLength={2} defaultValue={lender.state ?? ""} />
               </div>
             </div>
             <Button type="submit" size="sm" disabled={pending}>

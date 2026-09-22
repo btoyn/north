@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/page-header";
 import { Badge, CoverageBadge, SampleBadge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ContactCard } from "@/components/contact-card";
 import { ListPicker } from "@/components/list-picker";
 import { TierPicker } from "@/components/tier-picker";
 import { TimelineFilter } from "@/components/timeline-filter";
@@ -10,6 +11,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getLenderLists, getPreferences } from "@/lib/data";
 import { lenderCoverage } from "@/lib/coverage";
 import { tierGoalDays } from "@/lib/tiers";
+import { contactCardFields } from "@/lib/contact-card";
 import { isLookOpen, lookTitle, readLookStatus } from "@/lib/looks";
 import {
   describeReferrals,
@@ -51,7 +53,9 @@ export async function LenderDetail({
   const [{ data: lender }, prefs] = await Promise.all([
     supabase
       .from("lenders")
-      .select("*, institution:institutions(id, name, city, territory)")
+      .select(
+        "*, institution:institutions(id, name, address, city, state, territory, main_phone)",
+      )
       .eq("id", id)
       .is("deleted_at", null)
       .maybeSingle(),
@@ -202,6 +206,43 @@ export async function LenderDetail({
     .filter(Boolean)
     .join(" · ");
 
+  const institutionRow = lender.institution as unknown as {
+    id: string;
+    name: string;
+    address: string | null;
+    city: string | null;
+    state: string | null;
+    main_phone: string | null;
+  } | null;
+
+  const contactCard = (
+    <ContactCard
+      name={lender.full_name}
+      title={lender.title}
+      fields={contactCardFields({
+        lender: {
+          address: lender.address,
+          city: lender.city,
+          state: lender.state,
+          email: lender.email,
+          emailBounced: lender.email_bounced,
+          mobilePhone: lender.mobile_phone,
+          officePhone: lender.office_phone,
+        },
+        institution: institutionRow
+          ? {
+              id: institutionRow.id,
+              name: institutionRow.name,
+              address: institutionRow.address,
+              city: institutionRow.city,
+              state: institutionRow.state,
+              mainPhone: institutionRow.main_phone,
+            }
+          : null,
+      })}
+    />
+  );
+
   const glance = (
     <Card>
       <CardContent className="grid gap-4 pt-5 sm:grid-cols-2">
@@ -342,6 +383,10 @@ export async function LenderDetail({
           first_name: lender.first_name,
           email: lender.email,
           mobile_phone: lender.mobile_phone,
+          office_phone: lender.office_phone,
+          address: lender.address,
+          city: lender.city,
+          state: lender.state,
           relationship_tier: lender.relationship_tier,
           relationship_health: lender.relationship_health,
           communication_style: lender.communication_style,
@@ -408,6 +453,7 @@ export async function LenderDetail({
         {statusStrip}
         <div className="mb-4">{listStrip}</div>
         <div className="space-y-4">
+          {contactCard}
           {glance}
           {openPromises}
           {tools}
@@ -429,7 +475,10 @@ export async function LenderDetail({
           {openPromises}
           {timelineCard}
         </div>
-        <div className="space-y-5">{tools}</div>
+        <div className="space-y-5">
+          {contactCard}
+          {tools}
+        </div>
       </div>
     </>
   );
