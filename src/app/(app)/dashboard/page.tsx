@@ -15,6 +15,7 @@ import { getFlags } from "@/lib/flags";
 import { formatDateTime } from "@/lib/utils";
 import { MEETING_TYPE_LABELS } from "@/lib/labels";
 import { HeroHeader, type HeroChip } from "./hero-header";
+import { LenderSearch, type SearchableLender } from "./lender-search";
 import { RelationshipMomentum } from "./momentum";
 import { TodayRibbon, type RibbonData } from "./today-ribbon";
 import {
@@ -256,6 +257,18 @@ export default async function DashboardPage() {
 
   const nextMeeting = upcoming.meetings[0];
 
+  // The whole book, in the shape the search box matches on. Already in memory
+  // for the coverage figures above, so this costs a map rather than a query.
+  const searchable: SearchableLender[] = lenders.map((l) => ({
+    id: l.id,
+    name: l.full_name,
+    institution: l.institution?.name ?? null,
+    email: l.email,
+    tier: l.relationship_tier,
+    coverageStatus: l.coverage.personal,
+    daysSinceTouch: l.coverage.daysSinceVisible,
+  }));
+
   return (
     <>
       {/* A brand-new workspace is seeded with fictional lenders. Say so before
@@ -279,6 +292,12 @@ export default async function DashboardPage() {
         hasPlan={Boolean(plan)}
         aiEnabled={getFlags().ai}
       />
+
+      {/* Straight under the greeting, because "where is that guy's page" is the
+          most common reason this screen gets opened at all. */}
+      <div className="mb-5 mt-4">
+        <LenderSearch lenders={searchable} />
+      </div>
 
       {/* Phones lead with today's work and end with the momentum summary;
           desktop leads with momentum. */}
