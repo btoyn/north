@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "skills": {
+    "browser-testing-with-devtools": {
+      "source": "addyosmani/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/browser-testing-with-devtools/SKILL.md",
+      "computedHash": "639950ea71851d9c4919608cba8b6276cd1ba30cd82acdc4949c701537eed661"
+    },
+    "ci-cd-and-automation": {
+      "source": "addyosmani/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/ci-cd-and-automation/SKILL.md",
+      "computedHash": "578b098a7d2352ccdac8b8abdc40eb6803538e81cf8382f138da6188a655087c"
+    },
+    "constraint-driven-development": {
+      "source": "addyosmani/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/constraint-driven-development/SKILL.md",
+      "computedHash": "0f760f914c6321cbdee7d47773ddb5b27a809f79049010b4aeead9084f38133b"
+    },
+    "observability-and-instrumentation": {
+      "source": "addyosmani/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/observability-and-instrumentation/SKILL.md",
+      "computedHash": "e5eba32f952a29d20c0383728a9505d0ca2a90f1d8d075603e53804b441b2dd2"
+    }
+  }
+}

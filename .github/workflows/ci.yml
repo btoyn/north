@@ -1,0 +1,72 @@
+name: CI
+
+# Every push and every pull request, because the point of this file is that the
+# checks stop depending on somebody remembering to run them.
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+# A newer push to the same branch makes the older run pointless.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Lint, types, tests, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - run: npm ci
+
+      # Cheapest first, so an obvious mistake fails in seconds rather than
+      # after a four-minute build.
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Tests
+        run: npm test
+
+      # No secrets here on purpose. The app reads Supabase from NEXT_PUBLIC_
+      # variables at build time and tolerates their absence, so a green build
+      # here proves the code compiles without proving anything about anyone's
+      # keys — and CI never holds a credential it doesn't need.
+      - name: Build
+        run: npm run build
+
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - run: npm ci
+
+      # Critical blocks. Two unauthenticated remote-code-execution advisories
+      # sat in the pinned Next release until this pipeline was written, which is
+      # the argument for the gate existing at all.
+      - name: Fail on critical advisories
+        run: npm audit --audit-level=critical
+
+      # High and moderate report without blocking. The xlsx package the import
+      # wizard uses carries high-severity advisories with no fix published, so
+      # gating here would leave CI permanently red — and a permanently red check
+      # is one everybody learns to ignore, including the day it means something.
+      - name: Report high and moderate advisories
+        run: npm audit --audit-level=moderate || true
