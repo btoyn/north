@@ -4,7 +4,7 @@ import { isSupabaseConfigured, supabaseAnonKey, supabaseUrl } from "@/lib/supaba
 
 const PUBLIC_PATHS = ["/login", "/signup", "/reset-password", "/auth", "/setup"];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   // Without Supabase configured, route everything to the setup notice.
   if (!isSupabaseConfigured()) {
     if (request.nextUrl.pathname !== "/setup") {

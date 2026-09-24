@@ -18,7 +18,7 @@ export async function createClient() {
           );
         } catch {
           // Called from a Server Component where cookies are read-only;
-          // middleware refreshes the session instead.
+          // the proxy refreshes the session instead.
         }
       },
     },

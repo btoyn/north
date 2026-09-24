@@ -12,8 +12,8 @@ Business Development Officer. Built from `lender_crm_build_spec.md`.
 ## What's built (foundational slice)
 
 - **Auth** — separate CRM email/password via Supabase Auth, password reset,
-  session middleware. Private per-user workspace enforced by Row Level
-  Security on every table.
+  session handling in the proxy. Private per-user workspace enforced by Row
+  Level Security on every table.
 - **Full database schema** — all ~35 tables from the spec (lenders,
   institutions, activities, meetings, promises, opportunities, active loans,
   campaigns, trips, expenses, voice profile, audit log…) as SQL migrations in

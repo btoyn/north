@@ -243,7 +243,7 @@ verified when the failure was actually a network error showing the same message.
 tested against real data, say that.
 
 **Temporary preview routes and `.env.local` must be deleted before committing.** Also remove any
-middleware `PUBLIC_PATHS` bypass added to reach them, and clear `.next` afterwards — a stale type
+`PUBLIC_PATHS` bypass added to `src/proxy.ts` to reach them, and clear `.next` afterwards — a stale type
 validator will keep referencing the deleted route and fail the build.
 
 ---
