@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
-  Orbit,
+  Layers,
   KanbanSquare,
   CheckSquare,
   Banknote,
@@ -27,7 +27,7 @@ import type { NavCounts, QuickLogData } from "@/lib/data";
  */
 const PRIMARY_NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, count: null },
-  { href: "/spheres", label: "Spheres", icon: Orbit, count: "needsAttention" },
+  { href: "/tiers", label: "Tiers", icon: Layers, count: "needsAttention" },
   { href: "/pipeline", label: "Pipeline", icon: KanbanSquare, count: "looksDue" },
   { href: "/loans", label: "Loans", icon: Banknote, count: "loansDue" },
   { href: "/follow-ups", label: "Follow-ups", icon: CheckSquare, count: "followUps" },
@@ -43,7 +43,7 @@ const UTILITY_NAV = [
    while adding a lender is occasional and already prominent on Spheres. */
 const MOBILE_LEFT = [
   { href: "/dashboard", label: "Today", icon: LayoutDashboard },
-  { href: "/spheres", label: "Spheres", icon: Orbit },
+  { href: "/tiers", label: "Tiers", icon: Layers },
 ];
 
 const MOBILE_RIGHT = [

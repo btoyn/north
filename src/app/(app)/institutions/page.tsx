@@ -6,5 +6,5 @@ import { redirect } from "next/navigation";
  * /institutions/[id], which is where a group meeting starts.
  */
 export default function InstitutionsRedirect() {
-  redirect("/spheres/by-institution");
+  redirect("/tiers/by-institution");
 }

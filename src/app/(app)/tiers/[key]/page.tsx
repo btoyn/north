@@ -94,13 +94,13 @@ export default async function SpherePage({
   const closeParams = new URLSearchParams();
   if (q) closeParams.set("q", q);
   const closeHref = closeParams.toString()
-    ? `/spheres/${sphere.key}?${closeParams.toString()}`
-    : `/spheres/${sphere.key}`;
+    ? `/tiers/${sphere.key}?${closeParams.toString()}`
+    : `/tiers/${sphere.key}`;
 
   return (
     <>
       <Link
-        href="/spheres"
+        href="/tiers"
         className="mb-3 inline-flex items-center gap-1 text-[13px] font-medium text-muted transition-colors hover:text-foreground"
       >
         <ChevronLeft className="h-3.5 w-3.5" />

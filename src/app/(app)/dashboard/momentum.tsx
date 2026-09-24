@@ -153,7 +153,7 @@ export function RelationshipMomentum({ coverage, loans, meetings, split }: Momen
             {/* ---- A. Personal coverage ---- */}
             <div className={cn("flex min-h-[186px] flex-col p-5 sm:p-6", ZONE_BORDERS[0])}>
               <ZoneHead icon={HeartHandshake} tone="blue" label="Personal coverage" />
-              <Link href="/spheres/needs-contact" className="group mt-3 block">
+              <Link href="/tiers/needs-contact" className="group mt-3 block">
                 <p className="text-[38px] font-bold leading-none tracking-[-0.03em] text-primary tabular-nums group-hover:text-primary-hover">
                   {coverage.pct}
                   <span className="text-[22px] font-semibold">%</span>
@@ -276,7 +276,7 @@ export function RelationshipMomentum({ coverage, loans, meetings, split }: Momen
               <div className="mt-auto pt-4">
                 {meetings.next ? (
                   <Link
-                    href="/spheres/upcoming-meetings"
+                    href="/tiers/upcoming-meetings"
                     className="flex items-center gap-3 rounded-xl border border-border p-2 transition-colors hover:border-teal-border hover:bg-teal-soft/50"
                   >
                     <DateTile date={meetings.next.startAt} tone="teal" />

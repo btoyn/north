@@ -73,7 +73,7 @@ export async function logActivity(
   }
 
   revalidatePath(`/lenders/${input.lenderId}`);
-  revalidatePath("/spheres", "layout");
+  revalidatePath("/tiers", "layout");
   revalidatePath("/dashboard");
   return { activityId: inserted.id };
 }

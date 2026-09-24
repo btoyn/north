@@ -404,7 +404,7 @@ export function ImportWizard({
             </ul>
           </div>
         )}
-        <Link href="/spheres" className={buttonVariants({ variant: "primary", size: "md" })}>
+        <Link href="/tiers" className={buttonVariants({ variant: "primary", size: "md" })}>
           See your lenders
         </Link>
       </CardContent>

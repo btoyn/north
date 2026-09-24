@@ -211,28 +211,34 @@ action follows it. This is the material AI drafting draws on once it's switched 
 conversations, promises, personal notes — and only the current institution changes. The old bank
 stays in their history, and the app flags it, since that branch may now need a replacement contact.
 
-## Finding people — Spheres
+## Finding people — Tiers
 
-**Spheres** is the whole lender book with its useful slices given names. It replaced three separate
-screens (Lenders, Institutions, Needs Attention) that were all doors into the same table.
+**Tiers** is your whole referral book sorted by who actually sends you deals, with its other useful
+slices given names. It replaced three separate screens (Lenders, Institutions, Needs Attention)
+that were all doors into the same table.
 
-### Tiers
+### The four tiers
 
 Every lender has a tier, and the tier decides how often they're worth contacting:
 
 | Tier | Who | How often |
 |---|---|---|
-| **A** | Best lenders | Every two weeks |
-| **B** | Good lenders | Monthly |
-| **C** | Stay in front | Quarterly |
+| **A** | Has sent me deals | Monthly |
+| **B** | Real potential | Monthly |
+| **C** | Good relationship, no deals | Quarterly |
+| **D** | Stay on the radar | Twice a year |
 | **No tier** | Not sorted yet | Falls back to your Settings goal |
 
-The top row of Spheres is one card per tier with its count and a coverage bar, and the bar is
-measured against that tier's own window — so 70% on A is a harder number than 70% on C. Everything
-else in the app that says "overdue" now means overdue *for their tier*.
+A and B share a cadence but not a bar. For those two a touch has to have been two-way — a call, a
+lunch, a reply, or the weekly update on their own borrower. An email you sent into silence does not
+restart their clock. For C and D any contact counts.
 
-Set a tier from the **A / B / C / None** buttons at the top of a lender's panel. Anyone still
-untiered is measured against the workspace goal rather than quietly filed as quarterly, and Spheres
+The top row is one card per tier with its count and a coverage bar, and the bar is measured against
+that tier's own window — so 70% on A is a harder number than 70% on C. Everything else in the app
+that says "overdue" means overdue *for their tier*.
+
+Set a tier from the **A / B / C / D / None** buttons at the top of a lender's panel. Anyone still
+untiered is measured against the workspace goal rather than quietly filed as quarterly, and the page
 tells you how many are waiting.
 
 ### Saved views
@@ -306,12 +312,12 @@ offers to clear it first, so demo and real lenders never mix.
 | Task | Where |
 |---|---|
 | Log a call I just had | Profile → Log activity → Call |
-| Add a lender | Add, or Spheres → Add lender. Checks duplicates as you type. |
+| Add a lender | Add, or Tiers → Add lender. Checks duplicates as you type. |
 | Record something I owe | Profile → Add promise → I promised → due date |
 | Log a deal a lender mentioned | Pipeline → Log a look. Borrower name optional. |
 | See who actually sends me deals | Pipeline → Who's reaching out |
-| See who's slipping | Spheres → Needs contact, or the Overdue band on the status bar |
-| Plan a St. George trip | Spheres → Southern Utah |
+| See who's slipping | Tiers → Needs contact, or the Overdue band on the status bar |
+| Plan a St. George trip | Tiers → Southern Utah |
 | Ask someone to lunch | Schedule on their row, or Propose a meeting on their profile |
 | Set when you can meet | Settings → When you can meet |
 | Add another loan officer | Settings → Invite a loan officer |
@@ -332,7 +338,7 @@ So you don't hunt for a screen that isn't built.
 | Area | State | Notes |
 |---|---|---|
 | Dashboard, coverage, weekly list | Working | Everything above |
-| Spheres, tiers, profiles | Working | Saved views, search, timelines, bank changes |
+| Tiers, profiles | Working | Saved views, search, timelines, bank changes |
 | Promises, tasks, follow-ups | Working | Both directions, filters |
 | Meetings | Working | Notes, brief status |
 | Proposing a meeting | Working | Suggests dates, writes the ask, tracks the reply |

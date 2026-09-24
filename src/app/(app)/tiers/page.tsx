@@ -16,7 +16,7 @@ import {
 import { TIER_CADENCE, TIER_GOAL_DAYS } from "@/lib/tiers";
 import { cn } from "@/lib/utils";
 
-export const metadata = { title: "Spheres" };
+export const metadata = { title: "Tiers" };
 
 /**
  * Spheres — the front door to the lender book.
@@ -43,8 +43,8 @@ export default async function SpheresPage() {
   return (
     <>
       <PageHeader
-        title="Spheres"
-        description={`${rows.length} lender${rows.length === 1 ? "" : "s"}, sliced the ways you actually work`}
+        title="Tiers"
+        description={`${rows.length} lender${rows.length === 1 ? "" : "s"}, sorted by who sends you deals`}
         actions={
           <Link href="/lenders/new" className={buttonVariants({ variant: "primary", size: "md" })}>
             <Plus className="h-4 w-4" /> Add lender
@@ -53,7 +53,7 @@ export default async function SpheresPage() {
       />
 
       {/* A group ask with a yes on it has a date he could take. Needs Attention
-          used to carry this; Spheres is where it lives now. */}
+          used to carry this; Tiers is where it lives now. */}
       <GroupProposalsNeedingAttention proposals={groupProposals} />
 
       {/* Tiers — the top row, each with its count and how covered it is. */}
@@ -69,7 +69,7 @@ export default async function SpheresPage() {
             {untiered} {untiered === 1 ? "lender has" : "lenders have"} no tier yet.
           </span>{" "}
           Until one is set they&apos;re measured against the workspace goal. Open{" "}
-          <Link href="/spheres/tier-none" className="font-semibold underline">
+          <Link href="/tiers/tier-none" className="font-semibold underline">
             No tier
           </Link>{" "}
           and set them from the panel — it&apos;s one tap per person.
@@ -90,7 +90,7 @@ export default async function SpheresPage() {
                   {inGroup.map((sphere) => (
                     <li key={sphere.key}>
                       <Link
-                        href={`/spheres/${sphere.key}`}
+                        href={`/tiers/${sphere.key}`}
                         className="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-primary-soft/40"
                       >
                         <span className="min-w-0 flex-1">
@@ -128,7 +128,7 @@ function TierCard({ sphere, count }: { sphere: SphereDef; count: SphereCount }) 
 
   return (
     <Link
-      href={`/spheres/${sphere.key}`}
+      href={`/tiers/${sphere.key}`}
       className="group flex flex-col rounded-[18px] border border-border bg-surface p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)] transition-colors hover:border-primary/35 hover:bg-primary-soft/25"
     >
       <div className="flex items-baseline justify-between gap-2">

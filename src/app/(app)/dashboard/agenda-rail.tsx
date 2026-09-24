@@ -77,7 +77,7 @@ export function AgendaRail({ data }: { data: UpcomingData }) {
                   </dl>
                   {!nextMeeting.meeting_brief_generated_at && (
                     <Link
-                      href="/spheres/upcoming-meetings"
+                      href="/tiers/upcoming-meetings"
                       className={cn(buttonVariants({ variant: "secondary", size: "xs" }), "mt-2.5 h-11 px-3.5 sm:h-7 sm:px-2.5")}
                     >
                       <FileCheck2 className="h-3.5 w-3.5" />
@@ -142,7 +142,7 @@ export function AgendaRail({ data }: { data: UpcomingData }) {
                   stops confirmed
                 </p>
                 <Link
-                  href="/spheres/needs-contact"
+                  href="/tiers/needs-contact"
                   className={cn(buttonVariants({ variant: "secondary", size: "xs" }), "mt-2.5 h-11 px-3.5 sm:h-7 sm:px-2.5")}
                 >
                   Plan trip
@@ -204,7 +204,7 @@ export function AgendaRail({ data }: { data: UpcomingData }) {
       </div>
 
       <Link
-        href="/spheres/needs-contact"
+        href="/tiers/needs-contact"
         className="mt-4 block rounded-xl border border-dashed border-border px-4 py-3 text-center text-[13px] font-semibold text-primary transition-colors hover:border-primary/35 hover:bg-primary-soft"
       >
         Open needs-attention queue →

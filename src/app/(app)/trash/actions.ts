@@ -31,7 +31,7 @@ export async function restoreRecord(table: string, id: string): Promise<{ error?
 
   await logAudit(supabase, user.id, { entityType: table, entityId: id, action: "restore" });
   revalidatePath("/trash");
-  revalidatePath("/spheres", "layout");
+  revalidatePath("/tiers", "layout");
   revalidatePath("/dashboard");
   return {};
 }

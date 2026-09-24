@@ -6,6 +6,15 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/guide": ["./docs/USER_GUIDE.md"],
   },
+
+  // Spheres became Tiers. Anyone with the old address bookmarked, or a link to
+  // one saved view sitting in a text message, still lands in the right place.
+  async redirects() {
+    return [
+      { source: "/spheres", destination: "/tiers", permanent: true },
+      { source: "/spheres/:key", destination: "/tiers/:key", permanent: true },
+    ];
+  },
 };
 
 export default nextConfig;

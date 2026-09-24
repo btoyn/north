@@ -22,7 +22,7 @@ async function currentUserId(): Promise<string | null> {
 }
 
 function revalidate() {
-  revalidatePath("/spheres");
+  revalidatePath("/tiers");
   revalidatePath("/lenders", "layout");
 }
 

@@ -257,7 +257,7 @@ export async function createLender(input: CreateLenderInput): Promise<CreateLend
     newValue: { name: `${input.firstName} ${input.lastName}`.trim() },
   });
 
-  revalidatePath("/spheres", "layout");
+  revalidatePath("/tiers", "layout");
   revalidatePath("/lenders", "layout");
   if (listProblem) {
     return { status: "saved_without_lists", lenderId: lender.id, message: listProblem };
@@ -310,7 +310,7 @@ export async function setLenderTier(
   // The tier changes how often they're due, so every count that reads coverage
   // moves with it.
   revalidatePath(`/lenders/${lenderId}`);
-  revalidatePath("/spheres", "layout");
+  revalidatePath("/tiers", "layout");
   revalidatePath("/dashboard");
   return {};
 }
@@ -344,7 +344,7 @@ export async function updateLender(
   });
 
   revalidatePath(`/lenders/${lenderId}`);
-  revalidatePath("/spheres", "layout");
+  revalidatePath("/tiers", "layout");
   return {};
 }
 
@@ -367,8 +367,8 @@ export async function softDeleteLender(lenderId: string): Promise<void> {
     undoAvailable: true,
   });
 
-  revalidatePath("/spheres", "layout");
-  redirect("/spheres");
+  revalidatePath("/tiers", "layout");
+  redirect("/tiers");
 }
 
 export async function changeLenderInstitution(

@@ -23,5 +23,5 @@ export default async function NeedsAttentionRedirect({
   searchParams: Promise<{ f?: string }>;
 }) {
   const { f = "all" } = await searchParams;
-  redirect(`/spheres/${FILTER_TO_SPHERE[f] ?? "needs-contact"}`);
+  redirect(`/tiers/${FILTER_TO_SPHERE[f] ?? "needs-contact"}`);
 }

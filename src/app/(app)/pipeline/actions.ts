@@ -186,7 +186,7 @@ export async function moveLook(
 
   revalidatePath("/pipeline");
   revalidatePath("/dashboard");
-  revalidatePath("/spheres", "layout");
+  revalidatePath("/tiers", "layout");
   if (look.lender_id) revalidatePath(`/lenders/${look.lender_id}`);
   return {};
 }

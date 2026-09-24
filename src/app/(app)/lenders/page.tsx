@@ -28,5 +28,5 @@ export default async function LendersRedirect({
 }) {
   const { view = "all", q } = await searchParams;
   const sphere = VIEW_TO_SPHERE[view] ?? "by-institution";
-  redirect(`/spheres/${sphere}${q ? `?q=${encodeURIComponent(q)}` : ""}`);
+  redirect(`/tiers/${sphere}${q ? `?q=${encodeURIComponent(q)}` : ""}`);
 }

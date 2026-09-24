@@ -263,7 +263,7 @@ export async function recordGroupReply(
   if (error) return { error: error.message };
 
   revalidatePath("/dashboard");
-  revalidatePath("/spheres");
+  revalidatePath("/tiers");
   revalidatePath(`/proposals/${input.proposalId}`);
   return {};
 }
@@ -401,7 +401,7 @@ export async function confirmGroupMeeting(
     .eq("id", input.proposalId);
 
   revalidatePath("/dashboard");
-  revalidatePath("/spheres");
+  revalidatePath("/tiers");
   revalidatePath(`/proposals/${input.proposalId}`);
   for (const lenderId of input.lenderIds) revalidatePath(`/lenders/${lenderId}`);
   return { meetingId: meeting.id };

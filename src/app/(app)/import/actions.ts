@@ -202,7 +202,7 @@ export async function importLenders(
     },
   });
 
-  revalidatePath("/spheres", "layout");
+  revalidatePath("/tiers", "layout");
   revalidatePath("/institutions");
   revalidatePath("/dashboard");
   return report;
