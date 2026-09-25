@@ -6,6 +6,7 @@ import { MEETING_TYPE_DURATIONS } from "@/lib/labels";
 import { logAudit } from "@/lib/audit";
 import { loadSchedulingWindow, type CalendarSource } from "@/lib/scheduling-window";
 import { addConfirmedMeetingToCalendar } from "@/lib/microsoft/calendar-sync";
+import { calendarSubject, firstNameOf } from "@/lib/calendar-event";
 import type { AvailabilityRule } from "@/lib/scheduling";
 
 /**
@@ -291,7 +292,13 @@ export async function bookProposal(
   // won't answer must not undo a confirmation he already pressed.
   await addConfirmedMeetingToCalendar({
     meetingId: meeting.id,
-    subject: `${label} with ${lender.full_name}`,
+    // North's own title names the partner; the invitation names him, because
+    // the partner is the one reading it.
+    subject: calendarSubject({
+      meetingType: proposal.meeting_type,
+      customLabel: proposal.custom_label,
+      organizerFirstName: firstNameOf(user.user_metadata?.display_name as string | undefined),
+    }),
     start,
     minutes,
     locationName: proposal.location_name,

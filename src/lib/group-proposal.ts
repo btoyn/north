@@ -203,8 +203,43 @@ export function tallyGroupReplies({
 }
 
 /** Everyone who said yes to one date — the people the meeting is actually for. */
-export function attendeesForSlot(attendees: AttendeeReply[], slotIndex: number): AttendeeReply[] {
+export function attendeesForSlot(
+  attendees: readonly AttendeeReply[],
+  slotIndex: number,
+): AttendeeReply[] {
   return attendees.filter((a) => a.repliedAt && a.verdicts[slotIndex] === "yes");
+}
+
+/**
+ * How many yeses it takes before the invitation goes to the whole group.
+ *
+ * Below this the meeting is still being assembled and a calendar invite would
+ * be jumping the gun. At two it is happening, and the fastest way to get the
+ * quiet ones on it is to put it in front of them in Outlook, where accepting
+ * is one click and not a reply he then has to read.
+ */
+export const INVITE_EVERYONE_AT = 2;
+
+/**
+ * Who the invitation should go to for one date.
+ *
+ * Under the threshold, only the people who said yes to that date. At or over
+ * it, everybody who was asked -- except anyone who said no to this particular
+ * date. "Everyone" is what he wants and a hard no is the one case where it
+ * would embarrass him, so the no's are the only ones left off, and the screen
+ * still lists them with a box he can tick.
+ *
+ * Silence is not a no: the whole point of sending it is to reach the people
+ * who never wrote back.
+ */
+export function defaultInvitees(
+  attendees: readonly AttendeeReply[],
+  slotIndex: number,
+  threshold = INVITE_EVERYONE_AT,
+): AttendeeReply[] {
+  const yes = attendeesForSlot(attendees, slotIndex);
+  if (yes.length < threshold) return yes;
+  return attendees.filter((a) => a.verdicts[slotIndex] !== "no");
 }
 
 /** "Dave", "Dave and Mike", "Dave, Mike and Sara". */

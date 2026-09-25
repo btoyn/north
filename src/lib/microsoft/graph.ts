@@ -1,4 +1,5 @@
 import "server-only";
+import { MEETING_TIME_ZONE_WINDOWS, toZonedDateTime } from "@/lib/calendar-event";
 import { GRAPH_BASE, SCOPE_FOR, scopeSatisfied } from "./config";
 import { getAccessToken } from "./tokens";
 import type { MailMessage } from "@/lib/mail-match";
@@ -132,8 +133,17 @@ export async function createCalendarEvent(
     scope: SCOPE_FOR.createEvent,
     body: JSON.stringify({
       subject: input.subject,
-      start: { dateTime: input.start.toISOString(), timeZone: "UTC" },
-      end: { dateTime: input.end.toISOString(), timeZone: "UTC" },
+      // Wall-clock time plus the zone it belongs to, not a UTC instant. Both
+      // land at the same moment, but an event stored as UTC reads as 6pm in a
+      // shared Mountain calendar and moves the wrong way when anyone drags it.
+      start: {
+        dateTime: toZonedDateTime(input.start),
+        timeZone: MEETING_TIME_ZONE_WINDOWS,
+      },
+      end: {
+        dateTime: toZonedDateTime(input.end),
+        timeZone: MEETING_TIME_ZONE_WINDOWS,
+      },
       location: input.location ? { displayName: input.location } : undefined,
       body: input.body ? { contentType: "text", content: input.body } : undefined,
       attendees: input.attendeeEmails.map((address) => ({

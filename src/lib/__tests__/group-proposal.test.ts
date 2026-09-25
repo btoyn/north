@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { readReply } from "../reply-reader";
 import {
   attendeesForSlot,
+  defaultInvitees,
   deriveSlotVerdicts,
   describeGroupProgress,
   draftGroupProposalEmail,
@@ -247,5 +248,45 @@ describe("readGroupReply", () => {
       now: NOW,
     });
     expect(verdicts[1]).toBe("yes");
+  });
+});
+
+describe("defaultInvitees", () => {
+  const ids = (list: AttendeeReply[]) => list.map((a) => a.lenderId);
+
+  it("sends to the yeses only while one person has agreed", () => {
+    const list = [
+      attendee("Dan", ["yes", "unclear"]),
+      attendee("Jermaine", ["unclear", "unclear"]),
+      attendee("Josh", [], false),
+    ];
+    expect(ids(defaultInvitees(list, 0))).toEqual(["dan"]);
+  });
+
+  // Two yeses and it is happening, so the quiet ones get it in Outlook where
+  // accepting is a click.
+  it("sends to everyone once two have agreed", () => {
+    const list = [
+      attendee("Dan", ["yes", "unclear"]),
+      attendee("Jermaine", ["yes", "unclear"]),
+      attendee("Josh", [], false),
+    ];
+    expect(ids(defaultInvitees(list, 0))).toEqual(["dan", "jermaine", "josh"]);
+  });
+
+  it("leaves off the one person who said no to that date", () => {
+    const list = [
+      attendee("Dan", ["yes", "unclear"]),
+      attendee("Jermaine", ["yes", "unclear"]),
+      attendee("Mike", ["no", "yes"]),
+      attendee("Josh", [], false),
+    ];
+    expect(ids(defaultInvitees(list, 0))).toEqual(["dan", "jermaine", "josh"]);
+    // ...and he is back on the date he actually said yes to.
+    expect(ids(defaultInvitees(list, 1))).toEqual(["mike"]);
+  });
+
+  it("sends to nobody when nobody has agreed", () => {
+    expect(defaultInvitees([attendee("Josh", [], false)], 0)).toEqual([]);
   });
 });
