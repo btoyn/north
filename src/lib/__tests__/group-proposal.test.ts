@@ -6,6 +6,7 @@ import {
   describeGroupProgress,
   draftGroupProposalEmail,
   formatNameList,
+  readGroupReply,
   tallyGroupReplies,
   type AttendeeReply,
   type SlotVerdict,
@@ -19,11 +20,7 @@ const OFFERED = [THU_13, TUE_18];
 
 /** What the screen does: read the whole reply, then read it once per date. */
 function verdictsFor(text: string, offeredSlots = OFFERED): SlotVerdict[] {
-  return deriveSlotVerdicts({
-    offeredSlots,
-    reading: readReply({ text, offeredSlots, now: NOW }),
-    probes: offeredSlots.map((slot) => readReply({ text, offeredSlots: [slot], now: NOW })),
-  });
+  return readGroupReply({ text, offeredSlots, now: NOW }).verdicts;
 }
 
 function attendee(name: string, verdicts: SlotVerdict[], replied = true): AttendeeReply {
@@ -203,5 +200,52 @@ describe("describeGroupProgress", () => {
       attendees: [attendee("Dave Wright", ["no", "no"]), attendee("Quiet Pat", [], false)],
     });
     expect(describeGroupProgress(tally)).toBe("1 of 2 replied");
+  });
+});
+
+describe("readGroupReply", () => {
+  it("reads the answer and each date in one pass", () => {
+    const { reading, verdicts } = readGroupReply({
+      text: "Thursday the 13th works, thanks.",
+      offeredSlots: OFFERED,
+      now: NOW,
+    });
+    expect(reading.intent).toBe("accepted");
+    expect(verdicts).toEqual(["yes", "unclear"]);
+  });
+
+  // The reason this moved out of the mailbox sweep. The sweep read replies on a
+  // server six hours ahead of Utah, so a reply he got at 7pm Wednesday was read
+  // against a clock that had already turned Thursday -- and "Thursday" then
+  // means *next* Thursday. The offered date stops being a yes and becomes a
+  // counter-offer to a day a week later that nobody proposed.
+  it("resolves a bare weekday against the clock it is handed", () => {
+    const his = readGroupReply({
+      text: "Thursday works",
+      offeredSlots: OFFERED,
+      now: new Date(2026, 7, 12, 19, 0), // Wednesday evening, his clock
+    });
+    expect(his.reading.intent).toBe("accepted");
+    expect(his.reading.slot).toEqual(THU_13);
+    expect(his.verdicts).toEqual(["yes", "unclear"]);
+
+    const alreadyTomorrow = readGroupReply({
+      text: "Thursday works",
+      offeredSlots: OFFERED,
+      now: new Date(2026, 7, 13, 1, 0), // the same moment, a clock hours ahead
+    });
+    expect(alreadyTomorrow.reading.intent).toBe("countered");
+    expect(alreadyTomorrow.reading.slot?.getDate()).toBe(20);
+    expect(alreadyTomorrow.verdicts).toEqual(["unclear", "unclear"]);
+  });
+
+  it("carries the probes, which the old server-side pass never had", () => {
+    // Neither date is named, so only the per-date probe can resolve this one.
+    const { verdicts } = readGroupReply({
+      text: "The 18th is better for me.",
+      offeredSlots: OFFERED,
+      now: NOW,
+    });
+    expect(verdicts[1]).toBe("yes");
   });
 });

@@ -13,7 +13,7 @@
  */
 
 import { describeSlot } from "./scheduling";
-import type { ReplyReading } from "./reply-reader";
+import { readReply, type ReplyReading } from "./reply-reader";
 
 /**
  * What one attendee said about one date.
@@ -75,6 +75,43 @@ export function deriveSlotVerdicts({
     // definite about this one.
     return "unclear";
   });
+}
+
+export interface ReadGroupReplyInput {
+  /** The reply as it arrived, quoted history and all. */
+  text: string;
+  offeredSlots: Date[];
+  /** His clock. This is why the reading happens in the browser. */
+  now: Date;
+}
+
+export interface GroupReplyReading {
+  reading: ReplyReading;
+  verdicts: SlotVerdict[];
+}
+
+/**
+ * Read one reply against a group's dates: the whole answer, then each date.
+ *
+ * There was a second copy of this in the mailbox sweep, running server-side
+ * with a UTC `now` and without the per-date probes, so an automatic reading
+ * and a pasted one could disagree about the same words. One function, called
+ * from the browser in both cases, is the only way they stay honest.
+ */
+export function readGroupReply({
+  text,
+  offeredSlots,
+  now,
+}: ReadGroupReplyInput): GroupReplyReading {
+  const reading = readReply({ text, offeredSlots, now });
+  return {
+    reading,
+    verdicts: deriveSlotVerdicts({
+      offeredSlots,
+      reading,
+      probes: offeredSlots.map((slot) => readReply({ text, offeredSlots: [slot], now })),
+    }),
+  };
 }
 
 export interface AttendeeReply {

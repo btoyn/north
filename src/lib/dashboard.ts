@@ -488,9 +488,11 @@ export interface GroupProposalRow {
     name: string;
     firstName: string;
     repliedAt: string | null;
-    /** Null when the sweep spotted the reply and nobody has read it yet. */
+    /** Null when nobody has read the reply, and when the reader abstained. */
     replyIntent: string | null;
     replyText: string | null;
+    /** When the browser interpreted `replyText`. Null means it still hasn't. */
+    replyReadAt: string | null;
     verdicts: string[];
     counteredSlot: string | null;
   }[];
@@ -520,7 +522,7 @@ export async function getGroupProposals(): Promise<GroupProposalRow[]> {
   const { data } = await supabase
     .from("meeting_proposals")
     .select(
-      "id, institution_id, meeting_type, custom_label, offered_slots, sent_at, institution:institutions(name), attendees:meeting_proposal_attendees(lender_id, replied_at, reply_intent, reply_text, slot_verdicts, countered_slot, lender:lenders(full_name, first_name))",
+      "id, institution_id, meeting_type, custom_label, offered_slots, sent_at, institution:institutions(name), attendees:meeting_proposal_attendees(lender_id, replied_at, reply_intent, reply_text, reply_read_at, slot_verdicts, countered_slot, lender:lenders(full_name, first_name))",
     )
     .is("lender_id", null)
     .eq("status", "sent")
@@ -534,6 +536,7 @@ export async function getGroupProposals(): Promise<GroupProposalRow[]> {
       replied_at: string | null;
       reply_intent: string | null;
       reply_text: string | null;
+      reply_read_at: string | null;
       slot_verdicts: string[] | null;
       countered_slot: string | null;
       lender: { full_name: string; first_name: string } | null;
@@ -557,6 +560,7 @@ export async function getGroupProposals(): Promise<GroupProposalRow[]> {
           repliedAt: a.replied_at,
           replyIntent: a.reply_intent,
           replyText: a.reply_text,
+          replyReadAt: a.reply_read_at,
           verdicts: a.slot_verdicts ?? [],
           counteredSlot: a.countered_slot,
         }))

@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { detectReplies, isUnreadReply, type OpenAttendee } from "../proposal-replies";
+import {
+  detectReplies,
+  isUnreadReply,
+  repliesAwaitingReading,
+  type FetchedReply,
+  type OpenAttendee,
+} from "../proposal-replies";
 
 const SENT = "2026-09-25T20:09:08Z";
 
@@ -80,5 +86,37 @@ describe("isUnreadReply", () => {
 
   it("is false when they have not written back", () => {
     expect(isUnreadReply({ repliedAt: null, replyIntent: null })).toBe(false);
+  });
+});
+
+describe("repliesAwaitingReading", () => {
+  const row = (over: Partial<FetchedReply> = {}): FetchedReply => ({
+    replyText: "Works for me.",
+    replyReadAt: null,
+    ...over,
+  });
+
+  it("picks up a reply the sweep fetched and nobody has read", () => {
+    expect(repliesAwaitingReading([row()])).toHaveLength(1);
+  });
+
+  it("leaves alone a reply that has already been read", () => {
+    expect(repliesAwaitingReading([row({ replyReadAt: "2026-09-25T21:30:00Z" })])).toEqual([]);
+  });
+
+  // The whole reason reply_read_at exists. An abstention leaves the intent
+  // null, and keying off the intent would re-read this on every page load.
+  it("leaves alone a reply that was read and came back unclear", () => {
+    expect(
+      repliesAwaitingReading([
+        row({ replyText: "Let me look at my calendar.", replyReadAt: "2026-09-25T21:30:00Z" }),
+      ]),
+    ).toEqual([]);
+  });
+
+  it("skips an attendee the sweep only flagged, with no text to read", () => {
+    expect(repliesAwaitingReading([row({ replyText: null }), row({ replyText: "   " })])).toEqual(
+      [],
+    );
   });
 });
