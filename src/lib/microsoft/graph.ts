@@ -2,6 +2,7 @@ import "server-only";
 import { MEETING_TIME_ZONE_WINDOWS, toZonedDateTime } from "@/lib/calendar-event";
 import { GRAPH_BASE, SCOPE_FOR, scopeSatisfied } from "./config";
 import { getAccessToken } from "./tokens";
+import { parseGraphInstant } from "./free-busy";
 import type { MailMessage } from "@/lib/mail-match";
 import type { GraphAttendeeResponse } from "@/lib/meeting-responses";
 import {
@@ -170,11 +171,19 @@ export async function createCalendarEvent(
  * his calendar. `$select=attendees` keeps subjects, bodies and everyone else's
  * meetings out of the response.
  */
+export interface EventState {
+  attendees: GraphAttendeeResponse[];
+  /** Null when Graph answered in a zone we refuse to guess at. */
+  start: Date | null;
+  end: Date | null;
+  cancelled: boolean;
+}
+
 export async function getEventResponses(
   eventId: string,
-): Promise<{ attendees?: GraphAttendeeResponse[]; failure?: GraphFailure; detail?: string }> {
+): Promise<{ event?: EventState; failure?: GraphFailure; detail?: string }> {
   const result = await graphFetch(
-    `/me/events/${encodeURIComponent(eventId)}?$select=attendees`,
+    `/me/events/${encodeURIComponent(eventId)}?$select=attendees,start,end,isCancelled`,
     { scope: SCOPE_FOR.freeBusy },
   );
   if (!result.ok) return { failure: result.failure, detail: result.detail };
@@ -184,13 +193,25 @@ export async function getEventResponses(
       emailAddress?: { address?: string };
       status?: { response?: string };
     }[];
+    start?: { dateTime?: string; timeZone?: string };
+    end?: { dateTime?: string; timeZone?: string };
+    isCancelled?: boolean;
   };
 
   return {
-    attendees: (data.attendees ?? []).map((a) => ({
-      email: a.emailAddress?.address ?? null,
-      response: a.status?.response ?? null,
-    })),
+    event: {
+      attendees: (data.attendees ?? []).map((a) => ({
+        email: a.emailAddress?.address ?? null,
+        response: a.status?.response ?? null,
+      })),
+      // `Prefer: outlook.timezone="UTC"` on every request means these come back
+      // in UTC. `utcOnly` is the belt: a naive time in some other zone would
+      // parse as the server's clock and silently move his lunch by hours, so
+      // it comes back null and the time is left alone instead.
+      start: parseGraphInstant(data.start?.dateTime, data.start?.timeZone, { utcOnly: true }),
+      end: parseGraphInstant(data.end?.dateTime, data.end?.timeZone, { utcOnly: true }),
+      cancelled: Boolean(data.isCancelled),
+    },
   };
 }
 

@@ -302,3 +302,35 @@ describe("scopeSatisfied", () => {
     expect(scopeSatisfied([], "Calendars.Read")).toBe(false);
   });
 });
+
+describe("parseGraphInstant, utcOnly", () => {
+  it("reads a UTC answer either way it is written", () => {
+    expect(parseGraphInstant("2026-10-05T18:00:00.0000000Z", "UTC", { utcOnly: true })).toEqual(
+      new Date("2026-10-05T18:00:00Z"),
+    );
+    expect(parseGraphInstant("2026-10-05T18:00:00.0000000", "UTC", { utcOnly: true })).toEqual(
+      new Date("2026-10-05T18:00:00Z"),
+    );
+  });
+
+  // The one that would move his lunch. A naive time in a named zone has no
+  // offset, so `new Date` reads it as the server's clock: noon Mountain would
+  // be written back as noon UTC, which is 6am to him.
+  it("refuses a naive time in a named zone rather than guessing", () => {
+    expect(
+      parseGraphInstant("2026-10-05T12:00:00.0000000", "Mountain Standard Time", {
+        utcOnly: true,
+      }),
+    ).toBeNull();
+  });
+
+  it("still accepts one that carries its own offset", () => {
+    expect(
+      parseGraphInstant("2026-10-05T12:00:00-06:00", "Mountain Standard Time", { utcOnly: true }),
+    ).toEqual(new Date("2026-10-05T18:00:00Z"));
+  });
+
+  it("leaves the free/busy reading alone", () => {
+    expect(parseGraphInstant("2026-10-05T12:00:00", "Mountain Standard Time")).not.toBeNull();
+  });
+});
