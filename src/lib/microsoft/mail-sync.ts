@@ -50,6 +50,10 @@ export interface MailSyncResult {
   logged: number;
   /** Open meeting asks this sweep noticed an answer to. */
   repliesFound: number;
+  /** Of those, how many the reader could actually read. */
+  repliesRead?: number;
+  /** Why a reply went unread, when one did. */
+  replyNotes?: string[];
   scanned: number;
   ok: boolean;
   failure?: string;
@@ -105,7 +109,7 @@ export async function syncMailbox(): Promise<MailSyncResult> {
   const write = await insertMatches(supabase, user.id, candidates, institutionOf);
   const logged = write.inserted;
   const diagnostics = diagnose(fetched.messages, index, selfAddresses);
-  const repliesFound = await markProposalReplies(supabase, candidates);
+  const replies = await markProposalReplies(supabase, candidates);
 
   await supabase.from("mail_sync_state").upsert(
     {
@@ -124,7 +128,7 @@ export async function syncMailbox(): Promise<MailSyncResult> {
       // How many messages the sweep actually looked at. Without it, "logged
       // nothing" cannot be told apart from "saw nothing".
       last_scanned_count: fetched.messages.length,
-      last_detail: write.error ?? fetched.detail ?? null,
+      last_detail: write.error ?? replies.notes.join("; ") ?? fetched.detail ?? null,
       last_diagnostics: diagnostics,
     },
     { onConflict: "user_id" },
@@ -132,7 +136,9 @@ export async function syncMailbox(): Promise<MailSyncResult> {
 
   return {
     logged,
-    repliesFound,
+    repliesFound: replies.marked,
+    repliesRead: replies.read,
+    replyNotes: replies.notes,
     scanned: fetched.messages.length,
     ok: fetched.ok && !write.error,
     failure: write.error ? "write_failed" : fetched.failure,
@@ -208,11 +214,12 @@ async function insertMatches(
 async function markProposalReplies(
   supabase: Awaited<ReturnType<typeof createClient>>,
   matched: readonly MatchedMail[],
-): Promise<number> {
+): Promise<{ marked: number; read: number; notes: string[] }> {
   const inbound = matched
     .filter((m) => m.direction === "inbound")
     .map((m) => ({ lenderId: m.lenderId, occurredAt: m.occurredAt }));
-  if (inbound.length === 0) return 0;
+  const notes: string[] = [];
+  if (inbound.length === 0) return { marked: 0, read: 0, notes };
 
   const { data: rows } = await supabase
     .from("meeting_proposal_attendees")
@@ -248,6 +255,7 @@ async function markProposalReplies(
       .map((m) => [`${m.lenderId}:${m.occurredAt}`, m.messageId]),
   );
   let marked = 0;
+  let read = 0;
 
   for (const reply of found) {
     const update: Record<string, unknown> = {
@@ -260,9 +268,21 @@ async function markProposalReplies(
     // arrives as "they replied, you decide" rather than a wrong booking.
     const messageId = messageFor.get(`${reply.lenderId}:${reply.repliedAt}`);
     const slots = slotsByProposal.get(reply.proposalId) ?? [];
-    if (messageId && slots.length > 0) {
-      const { text } = await getReplyText(messageId);
-      if (text) {
+
+    // Every branch that skips the read says so. Silently marking "they
+    // replied" and leaving the verdict blank is indistinguishable from the
+    // reader abstaining, and that ambiguity has cost two rounds already.
+    if (!messageId) {
+      notes.push("no message id for a detected reply");
+    } else if (slots.length === 0) {
+      notes.push("proposal had no offered slots");
+    } else {
+      const { text, failure } = await getReplyText(messageId);
+      if (failure) {
+        notes.push(`reply text unavailable: ${failure}`);
+      } else if (!text) {
+        notes.push("reply text came back empty");
+      } else {
         const offeredSlots = slots.map((iso) => new Date(iso));
         const reading = readReply({ text, offeredSlots, now: new Date() });
         update.reply_text = text;
@@ -270,6 +290,7 @@ async function markProposalReplies(
         update.slot_verdicts = deriveSlotVerdicts({ offeredSlots, reading });
         update.countered_slot =
           reading.intent === "countered" ? (reading.slot?.toISOString() ?? null) : null;
+        read += 1;
       }
     }
 
@@ -283,5 +304,5 @@ async function markProposalReplies(
   }
 
   if (marked > 0) revalidatePath("/dashboard");
-  return marked;
+  return { marked, read, notes: [...new Set(notes)] };
 }
