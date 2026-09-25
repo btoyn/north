@@ -2,7 +2,9 @@ import "server-only";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { missingAttendees, responseChanges } from "@/lib/meeting-responses";
-import { createCalendarEvent, getEventResponses } from "./graph";
+import { importableMeetings } from "@/lib/calendar-import";
+import { MEETING_TYPE_DURATIONS } from "@/lib/labels";
+import { createCalendarEvent, getEventResponses, listCalendarEvents } from "./graph";
 
 /**
  * Putting a confirmed meeting on the real calendar.
@@ -201,4 +203,131 @@ export async function syncMeetingResponses(): Promise<ResponseSyncResult> {
   }
 
   return { checked, updated, added, rescheduled, failure };
+}
+
+/**
+ * How far either way the import reaches.
+ *
+ * Back ninety days for the same reason the mailbox sweep does: the coverage
+ * picture is wrong until the meetings that already happened are in it. Forward
+ * far enough that Up next is actually next, and no further -- a lunch six
+ * months out is not something he is deciding about today.
+ */
+const IMPORT_BACK_DAYS = 90;
+const IMPORT_FORWARD_DAYS = 120;
+
+export interface CalendarImportResult {
+  /** Events read. */
+  scanned: number;
+  /** Meetings created from them. */
+  imported: number;
+  ok: boolean;
+  failure?: string;
+}
+
+/**
+ * Brings in meetings with partners that North did not book.
+ *
+ * He arranges most things over email and always has. A lunch set up in a
+ * thread, or one a banker put in his calendar, used to be invisible here: not
+ * in Up next, not on anybody's clock, so North would report a partner going
+ * cold in the week he took them to lunch. The calendar knows. It just was
+ * never asked.
+ *
+ * Who is on the event decides it, never the subject -- a naming convention is
+ * a thing to forget, and it would still miss every invitation he did not send.
+ */
+export async function importCalendarMeetings(): Promise<CalendarImportResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { scanned: 0, imported: 0, ok: false, failure: "not_signed_in" };
+
+  const from = new Date(Date.now() - IMPORT_BACK_DAYS * 86_400_000);
+  const to = new Date(Date.now() + IMPORT_FORWARD_DAYS * 86_400_000);
+
+  const [fetched, { data: lenders }, { data: known }] = await Promise.all([
+    listCalendarEvents(from, to),
+    supabase
+      .from("lenders")
+      .select("id, email, institution_id, territory")
+      .is("deleted_at", null)
+      .not("email", "is", null),
+    supabase
+      .from("meetings")
+      .select("external_calendar_event_id")
+      .not("external_calendar_event_id", "is", null),
+  ]);
+
+  const lenderRows = lenders ?? [];
+  const lenderIdByEmail = new Map(
+    lenderRows.map((l) => [(l.email as string).trim().toLowerCase(), l.id as string]),
+  );
+  const detailsOf = new Map(
+    lenderRows.map((l) => [
+      l.id as string,
+      { institutionId: l.institution_id as string | null, territory: l.territory as string | null },
+    ]),
+  );
+
+  // Deleted meetings count as known. Re-importing something he threw away
+  // would be the app arguing with him.
+  const knownIds = new Set(
+    (known ?? []).map((m) => m.external_calendar_event_id as string),
+  );
+
+  const candidates = importableMeetings(fetched.events, lenderIdByEmail, knownIds);
+
+  let imported = 0;
+  for (const candidate of candidates) {
+    const first = detailsOf.get(candidate.partners[0].lenderId);
+    const minutes = MEETING_TYPE_DURATIONS[candidate.meetingType] ?? 60;
+    const endAt =
+      candidate.endAt ?? new Date(candidate.startAt.getTime() + minutes * 60_000);
+
+    const { data: meeting, error } = await supabase
+      .from("meetings")
+      .insert({
+        user_id: user.id,
+        institution_id: first?.institutionId ?? null,
+        meeting_type: candidate.meetingType,
+        title: candidate.title,
+        status: "confirmed",
+        confirmed: true,
+        tentative: false,
+        start_at: candidate.startAt.toISOString(),
+        end_at: endAt.toISOString(),
+        location_name: candidate.locationName,
+        territory: first?.territory ?? null,
+        notes_status: "pending",
+        external_calendar_event_id: candidate.eventId,
+      })
+      .select("id")
+      .single();
+
+    if (error || !meeting) continue;
+
+    const { error: attendeeError } = await supabase.from("meeting_attendees").insert(
+      candidate.partners.map((p) => ({
+        user_id: user.id,
+        meeting_id: meeting.id,
+        lender_id: p.lenderId,
+        response_status: p.responseStatus,
+      })),
+    );
+    if (!attendeeError) imported += 1;
+  }
+
+  if (imported > 0) {
+    revalidatePath("/dashboard");
+    revalidatePath("/tiers");
+  }
+
+  return {
+    scanned: fetched.events.length,
+    imported,
+    ok: fetched.ok,
+    failure: fetched.failure,
+  };
 }

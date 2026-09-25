@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { syncMailbox } from "@/lib/microsoft/mail-sync";
-import { syncMeetingResponses } from "@/lib/microsoft/calendar-sync";
+import { importCalendarMeetings, syncMeetingResponses } from "@/lib/microsoft/calendar-sync";
 
 /**
- * Runs the mailbox sweep, and reads back who accepted the invitations, for
- * whoever is signed in.
+ * Everything North asks Microsoft for, for whoever is signed in: the mailbox
+ * sweep, who accepted the invitations it sent, and the meetings with partners
+ * it never knew about.
  *
  * Driven from the browser rather than a cron, which is what lets it run as the
  * user: every read and write goes through their own session, so row-level
@@ -58,5 +59,9 @@ export async function POST(request: Request) {
   // has anything happened since I last looked.
   const responses = await syncMeetingResponses();
 
-  return NextResponse.json({ ...result, responses });
+  // And the meetings he never booked through North at all. Most of what he
+  // arranges is arranged over email, and until this ran none of it was here.
+  const calendar = await importCalendarMeetings();
+
+  return NextResponse.json({ ...result, responses, calendar });
 }
