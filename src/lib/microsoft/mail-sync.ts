@@ -164,14 +164,21 @@ async function insertMatches(
     external_id: externalId(m.messageId, m.lenderId),
   }));
 
-  const { data, error } = await supabase
+  // `count` rather than the returned rows: an upsert that ignores duplicates
+  // comes back with an empty representation even when it inserted hundreds, so
+  // reading data.length reported a completed ninety-day backfill as zero.
+  const { data, error, count } = await supabase
     .from("activities")
-    .upsert(rows, { onConflict: "user_id,external_id", ignoreDuplicates: true })
+    .upsert(rows, {
+      onConflict: "user_id,external_id",
+      ignoreDuplicates: true,
+      count: "exact",
+    })
     .select("id");
 
   // A write that fails has to reach the person looking at the screen. Sending
   // it to the console and reporting "0 logged" is how two separate constraint
   // failures here looked exactly like an empty mailbox.
   if (error) return { inserted: 0, error: error.message };
-  return { inserted: data?.length ?? 0 };
+  return { inserted: count ?? data?.length ?? 0 };
 }
