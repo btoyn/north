@@ -488,6 +488,8 @@ export interface GroupProposalRow {
     name: string;
     firstName: string;
     repliedAt: string | null;
+    /** Null when the sweep spotted the reply and nobody has read it yet. */
+    replyIntent: string | null;
     replyText: string | null;
     verdicts: string[];
     counteredSlot: string | null;
@@ -518,7 +520,7 @@ export async function getGroupProposals(): Promise<GroupProposalRow[]> {
   const { data } = await supabase
     .from("meeting_proposals")
     .select(
-      "id, institution_id, meeting_type, custom_label, offered_slots, sent_at, institution:institutions(name), attendees:meeting_proposal_attendees(lender_id, replied_at, reply_text, slot_verdicts, countered_slot, lender:lenders(full_name, first_name))",
+      "id, institution_id, meeting_type, custom_label, offered_slots, sent_at, institution:institutions(name), attendees:meeting_proposal_attendees(lender_id, replied_at, reply_intent, reply_text, slot_verdicts, countered_slot, lender:lenders(full_name, first_name))",
     )
     .is("lender_id", null)
     .eq("status", "sent")
@@ -530,6 +532,7 @@ export async function getGroupProposals(): Promise<GroupProposalRow[]> {
     const attendees = (r.attendees ?? []) as unknown as {
       lender_id: string;
       replied_at: string | null;
+      reply_intent: string | null;
       reply_text: string | null;
       slot_verdicts: string[] | null;
       countered_slot: string | null;
@@ -552,6 +555,7 @@ export async function getGroupProposals(): Promise<GroupProposalRow[]> {
           name: a.lender?.full_name ?? "Unknown",
           firstName: a.lender?.first_name ?? "they",
           repliedAt: a.replied_at,
+          replyIntent: a.reply_intent,
           replyText: a.reply_text,
           verdicts: a.slot_verdicts ?? [],
           counteredSlot: a.countered_slot,

@@ -1,4 +1,5 @@
 import "server-only";
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { COVERAGE_ACTIVITY_TYPES, isPersonalTouch } from "@/lib/coverage";
 import {
@@ -10,6 +11,7 @@ import {
   type MatchDiagnostics,
   type MatchedMail,
 } from "@/lib/mail-match";
+import { detectReplies } from "@/lib/proposal-replies";
 import { listMessagesSince } from "./graph";
 import { getConnection } from "./tokens";
 
@@ -44,6 +46,8 @@ const OVERLAP_HOURS = 24;
 
 export interface MailSyncResult {
   logged: number;
+  /** Open meeting asks this sweep noticed an answer to. */
+  repliesFound: number;
   scanned: number;
   ok: boolean;
   failure?: string;
@@ -56,11 +60,13 @@ export async function syncMailbox(): Promise<MailSyncResult> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { logged: 0, scanned: 0, ok: false, failure: "not_signed_in" };
+  if (!user) {
+    return { logged: 0, repliesFound: 0, scanned: 0, ok: false, failure: "not_signed_in" };
+  }
 
   const connection = await getConnection();
   if (!connection || connection.invalidatedAt) {
-    return { logged: 0, scanned: 0, ok: false, failure: "not_connected" };
+    return { logged: 0, repliesFound: 0, scanned: 0, ok: false, failure: "not_connected" };
   }
 
   const [{ data: state }, { data: lenders }] = await Promise.all([
@@ -97,6 +103,7 @@ export async function syncMailbox(): Promise<MailSyncResult> {
   const write = await insertMatches(supabase, user.id, candidates, institutionOf);
   const logged = write.inserted;
   const diagnostics = diagnose(fetched.messages, index, selfAddresses);
+  const repliesFound = await markProposalReplies(supabase, candidates);
 
   await supabase.from("mail_sync_state").upsert(
     {
@@ -123,6 +130,7 @@ export async function syncMailbox(): Promise<MailSyncResult> {
 
   return {
     logged,
+    repliesFound,
     scanned: fetched.messages.length,
     ok: fetched.ok && !write.error,
     failure: write.error ? "write_failed" : fetched.failure,
@@ -181,4 +189,59 @@ async function insertMatches(
   // failures here looked exactly like an empty mailbox.
   if (error) return { inserted: 0, error: error.message };
   return { inserted: count ?? data?.length ?? 0 };
+}
+
+
+/**
+ * Marks the people who answered an open meeting ask.
+ *
+ * Only a flag. `reply_intent` is left null on purpose: that pairing —
+ * answered, undecided — is what the dashboard reads to say somebody is waiting
+ * on him. Recording the verdict by hand fills the intent in and the nudge goes
+ * away.
+ *
+ * Best effort, like the rest of the sweep. A proposal that cannot be updated is
+ * not a reason to throw away the mail that was just logged.
+ */
+async function markProposalReplies(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  matched: readonly MatchedMail[],
+): Promise<number> {
+  const inbound = matched
+    .filter((m) => m.direction === "inbound")
+    .map((m) => ({ lenderId: m.lenderId, occurredAt: m.occurredAt }));
+  if (inbound.length === 0) return 0;
+
+  const { data: rows } = await supabase
+    .from("meeting_proposal_attendees")
+    .select("proposal_id, lender_id, replied_at, proposal:meeting_proposals(sent_at, status)")
+    .is("replied_at", null);
+
+  const open = (rows ?? [])
+    .map((r) => {
+      const proposal = r.proposal as unknown as { sent_at: string | null; status: string } | null;
+      return {
+        proposalId: r.proposal_id as string,
+        lenderId: r.lender_id as string,
+        proposalSentAt: proposal?.status === "sent" ? (proposal.sent_at ?? null) : null,
+        repliedAt: r.replied_at as string | null,
+      };
+    })
+    .filter((a) => a.proposalSentAt);
+
+  const found = detectReplies(open, inbound);
+  let marked = 0;
+
+  for (const reply of found) {
+    const { error } = await supabase
+      .from("meeting_proposal_attendees")
+      .update({ replied_at: reply.repliedAt, updated_at: new Date().toISOString() })
+      .eq("proposal_id", reply.proposalId)
+      .eq("lender_id", reply.lenderId)
+      .is("replied_at", null);
+    if (!error) marked += 1;
+  }
+
+  if (marked > 0) revalidatePath("/dashboard");
+  return marked;
 }

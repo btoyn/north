@@ -7,6 +7,7 @@ import { CalendarCheck, Clock, MessageSquareReply, Users, X } from "lucide-react
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { readReply } from "@/lib/reply-reader";
+import { isUnreadReply } from "@/lib/proposal-replies";
 import { describeSlot } from "@/lib/scheduling";
 import { describeGroupProgress, tallyGroupReplies, type SlotVerdict } from "@/lib/group-proposal";
 import { MEETING_TYPE_LABELS } from "@/lib/labels";
@@ -315,6 +316,10 @@ function GroupRow({ proposal, chaseDays }: { proposal: GroupProposalRow; chaseDa
   });
 
   const silent = tally.replied.length === 0 && proposal.waitingDays >= chaseDays;
+
+  // Spotted by the mailbox sweep and not yet read. The sweep never sees the
+  // body, so all it can say is that somebody answered.
+  const unread = proposal.attendees.filter((a) => isUnreadReply(a));
   const label =
     proposal.customLabel?.trim() || MEETING_TYPE_LABELS[proposal.meetingType] || "Meeting";
 
@@ -338,10 +343,16 @@ function GroupRow({ proposal, chaseDays }: { proposal: GroupProposalRow; chaseDa
             )}
           </span>
         </span>
-        {tally.hasAnyYes && (
-          <span className="shrink-0 rounded-full bg-teal-soft px-2 py-0.5 text-[11.5px] font-semibold text-[#1f6b60]">
-            Ready to confirm
+        {unread.length > 0 ? (
+          <span className="shrink-0 rounded-full bg-gold-soft px-2 py-0.5 text-[11.5px] font-semibold text-[#6d5210]">
+            {unread.length === 1 ? `${unread[0].firstName} replied` : `${unread.length} replied`}
           </span>
+        ) : (
+          tally.hasAnyYes && (
+            <span className="shrink-0 rounded-full bg-teal-soft px-2 py-0.5 text-[11.5px] font-semibold text-[#1f6b60]">
+              Ready to confirm
+            </span>
+          )
         )}
       </Link>
     </li>
