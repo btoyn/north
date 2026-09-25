@@ -14,6 +14,33 @@
  * to guess at today.
  */
 
+/**
+ * Straightens the quotes a mail client put in.
+ *
+ * Outlook autocorrects every apostrophe to U+2019, so "I'm available" arrives
+ * as "I\u2019m available" and every rule here written with a straight quote
+ * misses it: can't, won't, doesn't, let's, that'll, I'm. A real reply was read
+ * as unclear for exactly this.
+ */
+export function normalizeQuotes(text: string): string {
+  return text.replace(/[\u2018\u2019\u201B\u02BC]/g, "'").replace(/[\u201C\u201D]/g, '"');
+}
+
+/**
+ * Drops the "this came from outside the organisation" banner banks staple to
+ * the top of external mail.
+ *
+ * It is not something the person wrote, and it is a paragraph of words the
+ * reader would otherwise weigh. One that happens to contain "cannot" would
+ * turn a yes into a no.
+ */
+export function stripSecurityBanner(text: string): string {
+  return text.replace(
+    /^\s*(?:\[?(?:caution|external|warning|attention)\]?\b[^\n]*\n)(?:[^\n]*\n)*?\s*\n/i,
+    "",
+  );
+}
+
 export type ReplyIntent = "accepted" | "declined" | "countered" | "unclear";
 
 export interface ReplyReading {
@@ -202,7 +229,7 @@ export function readReply({
   now,
   horizonDays = 90,
 }: ReadReplyInput): ReplyReading {
-  const body = stripQuotedHistory(text);
+  const body = stripQuotedHistory(normalizeQuotes(stripSecurityBanner(text)));
   if (!body) {
     return { intent: "unclear", slot: null, reason: "The reply came through empty." };
   }

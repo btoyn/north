@@ -156,3 +156,38 @@ describe("the ways people say yes", () => {
     expect(read("Can't make it").intent).toBe("declined");
   });
 });
+
+describe("what a mail client does to a reply on the way in", () => {
+  const MONDAY = new Date("2026-10-05T12:00:00");
+  const NOW = new Date("2026-09-25T20:00:00");
+  const read = (text: string) => readReply({ text, offeredSlots: [MONDAY], now: NOW });
+
+  const BANNER =
+    "CAUTION: This email originated from outside of the organization. " +
+    "DO NOT CLICK links or open attachments unless you recognize the sender " +
+    "and know the content is safe.\r\n\r\n";
+
+  it("reads a curly apostrophe as an apostrophe", () => {
+    // Outlook autocorrects every apostrophe. This exact reply came back
+    // "unclear" against a real lunch ask because of one character.
+    expect(read("I’m available, thanks for invite!").intent).toBe("accepted");
+    expect(read("I’m free that day").intent).toBe("accepted");
+  });
+
+  it("still hears a no written with a curly apostrophe", () => {
+    expect(read("Sorry, I can’t make it").intent).toBe("declined");
+    expect(read("That doesn’t work for me").intent).not.toBe("accepted");
+  });
+
+  it("ignores the external-sender banner above the reply", () => {
+    expect(read(`${BANNER}Works for me.`).intent).toBe("accepted");
+    expect(read(`${BANNER}I’m available, thanks for invite!`).intent).toBe("accepted");
+  });
+
+  it("reads the real pair that came back on the lunch ask", () => {
+    const dan = `${BANNER}Works for me.\r\n\r\nDan Stock | Zions Bank`;
+    const jermaine = `${BANNER}I’m available, thanks for invite!\r\n\r\nJermaine Odjegba`;
+    expect(read(dan).intent).toBe("accepted");
+    expect(read(jermaine).intent).toBe("accepted");
+  });
+});
