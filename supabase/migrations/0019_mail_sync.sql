@@ -36,6 +36,9 @@ create trigger mail_sync_state_updated_at
 -- Dedupe, enforced by the database rather than by the scan remembering to
 -- check. A message that reaches two lenders gets two rows, so the id carries
 -- the lender as well and the pair is what has to be unique.
+--
+-- The `where external_id is not null` predicate this originally carried is
+-- removed in 0022: a partial index cannot serve as an ON CONFLICT target, so it
+-- silently broke every insert the sweep attempted.
 create unique index activities_external_id_unique
-  on activities (user_id, external_id)
-  where external_id is not null;
+  on activities (user_id, external_id);
