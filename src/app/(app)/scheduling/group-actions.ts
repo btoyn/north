@@ -6,6 +6,7 @@ import { logAudit } from "@/lib/audit";
 import { MEETING_TYPE_DURATIONS, MEETING_TYPE_LABELS } from "@/lib/labels";
 import { loadSchedulingWindow, type CalendarSource } from "@/lib/scheduling-window";
 import { addConfirmedMeetingToCalendar } from "@/lib/microsoft/calendar-sync";
+import { calendarSubject, firstNameOf } from "@/lib/calendar-event";
 import { formatNameList, type SlotVerdict } from "@/lib/group-proposal";
 import type { AvailabilityRule } from "@/lib/scheduling";
 
@@ -352,9 +353,11 @@ export interface ConfirmGroupMeetingInput {
  * Turns the agreed date into a real meeting.
  *
  * Never automatic, at any number of yeses. Confirming counts as coverage for
- * everyone on the meeting straight away — the `lender_coverage` view credits
- * every attendee row, so a group of five is five people covered the moment he
- * presses this, exactly as a confirmed single meeting is one.
+ * everyone who said yes straight away — the `lender_coverage` view credits
+ * those attendee rows, so three yeses is three people covered the moment he
+ * presses this, exactly as a confirmed single meeting is one. The extra people
+ * the invitation reaches are on the meeting but not covered by it: an invite
+ * they never answered is not contact, and 0024 is where that line is drawn.
  */
 export async function confirmGroupMeeting(
   input: ConfirmGroupMeetingInput,
@@ -371,7 +374,7 @@ export async function confirmGroupMeeting(
 
   const { data: proposal } = await supabase
     .from("meeting_proposals")
-    .select("id, institution_id, meeting_type, custom_label, location_name, status")
+    .select("id, institution_id, meeting_type, custom_label, location_name, status, offered_slots")
     .eq("id", input.proposalId)
     .is("deleted_at", null)
     .maybeSingle();
@@ -381,7 +384,7 @@ export async function confirmGroupMeeting(
   // Only people who were actually invited to this proposal can be on it.
   const { data: invited } = await supabase
     .from("meeting_proposal_attendees")
-    .select("lender_id, lender:lenders(first_name, territory, email)")
+    .select("lender_id, slot_verdicts, lender:lenders(first_name, territory, email)")
     .eq("proposal_id", input.proposalId)
     .in("lender_id", input.lenderIds);
 
@@ -441,12 +444,29 @@ export async function confirmGroupMeeting(
     return { error: meetingError?.message ?? "Could not create the meeting." };
   }
 
+  // Which of the offered dates this is, so a yes can be told from an invite.
+  const slotIndex = (proposal.offered_slots ?? []).findIndex(
+    (iso: string) => new Date(iso).getTime() === start.getTime(),
+  );
+  const saidYes = new Set(
+    (invited ?? [])
+      .filter((a) => {
+        const verdicts = (a.slot_verdicts ?? []) as string[];
+        return slotIndex >= 0 && verdicts[slotIndex] === "yes";
+      })
+      .map((a) => a.lender_id as string),
+  );
+
+  // Everyone on the invitation is on the meeting, but only the ones who
+  // actually agreed are 'confirmed' -- and coverage counts 'confirmed' only.
+  // Someone who was simply invited must not read as covered off the back of an
+  // email they never answered.
   const { error: attendeeError } = await supabase.from("meeting_attendees").insert(
     input.lenderIds.map((lenderId) => ({
       user_id: user.id,
       meeting_id: meeting.id,
       lender_id: lenderId,
-      response_status: "confirmed",
+      response_status: saidYes.has(lenderId) ? "confirmed" : "invited",
     })),
   );
   if (attendeeError) return { error: attendeeError.message };
@@ -454,7 +474,13 @@ export async function confirmGroupMeeting(
   // One invitation with everyone on it, the same way the ask went out.
   await addConfirmedMeetingToCalendar({
     meetingId: meeting.id,
-    subject: `${label.charAt(0).toUpperCase()}${label.slice(1)} with ${withWhom}`,
+    // North's own title names the partners; the invitation names him, because
+    // they are the ones reading it, and they know who they are.
+    subject: calendarSubject({
+      meetingType: proposal.meeting_type,
+      customLabel: proposal.custom_label,
+      organizerFirstName: firstNameOf(user.user_metadata?.display_name as string | undefined),
+    }),
     start,
     minutes,
     locationName: proposal.location_name,

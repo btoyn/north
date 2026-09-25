@@ -86,7 +86,10 @@ export async function getCoverageHistory(): Promise<CoverageHistory> {
     // which keeps the query readable and avoids embedded-filter syntax.
     supabase
       .from("meetings")
-      .select("start_at, attendees:meeting_attendees(lender_id)")
+      // `response_status` matters: since group invitations go to everyone once
+      // two have said yes, being on a meeting no longer means having agreed to
+      // it. Same line `lender_coverage` draws.
+      .select("start_at, attendees:meeting_attendees(lender_id, response_status)")
       .eq("status", "confirmed")
       .gte("start_at", fetchFrom)
       .is("deleted_at", null),
@@ -103,8 +106,14 @@ export async function getCoverageHistory(): Promise<CoverageHistory> {
 
   for (const a of activities ?? []) push(a.lender_id, a.occurred_at);
   for (const meeting of attendances ?? []) {
-    const attendees = (meeting.attendees ?? []) as unknown as { lender_id: string }[];
-    for (const attendee of attendees) push(attendee.lender_id, meeting.start_at);
+    const attendees = (meeting.attendees ?? []) as unknown as {
+      lender_id: string;
+      response_status: string | null;
+    }[];
+    for (const attendee of attendees) {
+      if (attendee.response_status !== "confirmed") continue;
+      push(attendee.lender_id, meeting.start_at);
+    }
   }
 
   const active = (lenders ?? []).filter((l) => l.active);

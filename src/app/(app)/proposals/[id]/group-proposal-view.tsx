@@ -10,6 +10,7 @@ import { describeSlot } from "@/lib/scheduling";
 import { MEETING_TYPE_LABELS } from "@/lib/labels";
 import {
   attendeesForSlot,
+  defaultInvitees,
   readGroupReply,
   tallyGroupReplies,
   formatNameList,
@@ -408,10 +409,18 @@ function ConfirmCard({
   const [dropped, setDropped] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const going = useMemo(
-    () => attendeesForSlot(attendees, slotIndex).filter((a) => !dropped.includes(a.lenderId)),
-    [attendees, slotIndex, dropped],
+  // Once two people have said yes the invitation goes to everyone, so the quiet
+  // ones can accept in Outlook instead of writing back.
+  const candidates = useMemo(
+    () => defaultInvitees(attendees, slotIndex),
+    [attendees, slotIndex],
   );
+  const going = useMemo(
+    () => candidates.filter((a) => !dropped.includes(a.lenderId)),
+    [candidates, dropped],
+  );
+  const yesCountHere = attendeesForSlot(attendees, slotIndex).length;
+  const alsoInvited = candidates.length - yesCountHere;
 
   function confirm() {
     setError(null);
@@ -459,11 +468,11 @@ function ConfirmCard({
       )}
 
       <div className="mt-3 flex flex-col gap-1.5">
-        <p className="text-[13px] font-medium">Who&apos;s on it</p>
-        {attendeesForSlot(attendees, slotIndex).length === 0 ? (
+        <p className="text-[13px] font-medium">Who gets the invite</p>
+        {candidates.length === 0 ? (
           <p className="text-[13px] text-muted">Nobody said yes to that date.</p>
         ) : (
-          attendeesForSlot(attendees, slotIndex).map((a) => (
+          candidates.map((a) => (
             <label key={a.lenderId} className="flex min-h-9 items-center gap-2.5 text-[13.5px]">
               <input
                 type="checkbox"
@@ -478,8 +487,20 @@ function ConfirmCard({
                 className="h-4 w-4 accent-primary"
               />
               {a.name}
+              {a.verdicts[slotIndex] !== "yes" && (
+                <span className="text-[12px] text-muted">
+                  {a.repliedAt ? "didn't pick this date" : "no reply yet"}
+                </span>
+              )}
             </label>
           ))
+        )}
+        {alsoInvited > 0 && (
+          <p className="mt-1 text-[12.5px] text-muted">
+            {yesCountHere} said yes, so it goes to everyone who was asked. The other{" "}
+            {alsoInvited === 1 ? "one can accept" : `${alsoInvited} can accept`} in Outlook.
+            Only the yeses count as covered until then.
+          </p>
         )}
       </div>
 
