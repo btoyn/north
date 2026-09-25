@@ -195,3 +195,65 @@ export function matchMessages(
 export function externalId(messageId: string, lenderId: string): string {
   return `msgraph:${messageId}:${lenderId}`;
 }
+
+
+export interface MatchDiagnostics {
+  /** Messages Graph returned with no usable sender address. */
+  noSender: number;
+  /** Messages sent by the account holder. */
+  fromSelf: number;
+  /** Messages whose sender is a known partner. */
+  fromPartner: number;
+  /** Everything else, grouped by sender domain, commonest first. */
+  unmatchedDomains: { domain: string; count: number }[];
+}
+
+/**
+ * Why a sweep matched what it did, in numbers rather than messages.
+ *
+ * Built for the case where a scan reads a full mailbox and logs nothing, which
+ * could be a broken sender lookup, an address book that disagrees with reality,
+ * or a genuinely quiet quarter. Domains only: enough to recognise that the
+ * banks are in there and the addresses are wrong, and not enough to be a copy
+ * of anybody's inbox.
+ */
+export function diagnose(
+  messages: readonly MailMessage[],
+  lenderIndex: ReadonlyMap<string, string>,
+  selfAddresses: readonly string[],
+  topN = 12,
+): MatchDiagnostics {
+  const mine = new Set(
+    selfAddresses.map((a) => normalizeAddress(a)).filter((a): a is string => Boolean(a)),
+  );
+
+  let noSender = 0;
+  let fromSelf = 0;
+  let fromPartner = 0;
+  const domains = new Map<string, number>();
+
+  for (const message of messages) {
+    const from = normalizeAddress(message.from);
+    if (!from) {
+      noSender += 1;
+      continue;
+    }
+    if (mine.has(from)) {
+      fromSelf += 1;
+      continue;
+    }
+    if (lenderIndex.has(from)) {
+      fromPartner += 1;
+      continue;
+    }
+    const domain = from.slice(from.indexOf("@") + 1);
+    domains.set(domain, (domains.get(domain) ?? 0) + 1);
+  }
+
+  const unmatchedDomains = [...domains.entries()]
+    .map(([domain, count]) => ({ domain, count }))
+    .sort((a, b) => b.count - a.count || a.domain.localeCompare(b.domain))
+    .slice(0, topN);
+
+  return { noSender, fromSelf, fromPartner, unmatchedDomains };
+}

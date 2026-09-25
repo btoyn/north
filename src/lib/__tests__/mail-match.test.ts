@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildLenderIndex,
+  diagnose,
   externalId,
   isAutoReply,
   matchMessage,
@@ -212,5 +213,43 @@ describe("matchMessages", () => {
     );
     expect(matches).toHaveLength(2);
     expect(new Set(matches.map((m) => externalId(m.messageId, m.lenderId))).size).toBe(2);
+  });
+});
+
+describe("diagnose", () => {
+  it("splits a sweep into the four reasons a message did not log", () => {
+    const messages: MailMessage[] = [
+      message(),                                                   // from a partner
+      message({ id: "2", from: null }),                            // no sender
+      message({ id: "3", from: "brandon@im504.example" }),         // from me
+      message({ id: "4", from: "news@chamber.example" }),          // stranger
+      message({ id: "5", from: "someone@chamber.example" }),       // same domain
+      message({ id: "6", from: "rep@titleco.example" }),           // stranger
+    ];
+
+    const d = diagnose(messages, index, ME);
+    expect(d.fromPartner).toBe(1);
+    expect(d.noSender).toBe(1);
+    expect(d.fromSelf).toBe(1);
+    expect(d.unmatchedDomains).toEqual([
+      { domain: "chamber.example", count: 2 },
+      { domain: "titleco.example", count: 1 },
+    ]);
+  });
+
+  it("keeps only the commonest domains", () => {
+    const messages: MailMessage[] = Array.from({ length: 5 }, (_, i) =>
+      message({ id: `m${i}`, from: `a@d${i}.example` }),
+    );
+    expect(diagnose(messages, index, ME, 2).unmatchedDomains).toHaveLength(2);
+  });
+
+  it("reports nothing for an empty sweep", () => {
+    expect(diagnose([], index, ME)).toEqual({
+      noSender: 0,
+      fromSelf: 0,
+      fromPartner: 0,
+      unmatchedDomains: [],
+    });
   });
 });

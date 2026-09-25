@@ -3,8 +3,10 @@ import { createClient } from "@/lib/supabase/server";
 import { COVERAGE_ACTIVITY_TYPES, isPersonalTouch } from "@/lib/coverage";
 import {
   buildLenderIndex,
+  diagnose,
   externalId,
   matchMessages,
+  type MatchDiagnostics,
   type MatchedMail,
 } from "@/lib/mail-match";
 import { listMessagesSince } from "./graph";
@@ -45,6 +47,7 @@ export interface MailSyncResult {
   ok: boolean;
   failure?: string;
   detail?: string;
+  diagnostics?: MatchDiagnostics;
 }
 
 export async function syncMailbox(): Promise<MailSyncResult> {
@@ -91,6 +94,7 @@ export async function syncMailbox(): Promise<MailSyncResult> {
 
   const candidates = matchMessages(fetched.messages, index, selfAddresses);
   const logged = await insertMatches(supabase, user.id, candidates, institutionOf);
+  const diagnostics = diagnose(fetched.messages, index, selfAddresses);
 
   await supabase.from("mail_sync_state").upsert(
     {
@@ -105,6 +109,7 @@ export async function syncMailbox(): Promise<MailSyncResult> {
       // nothing" cannot be told apart from "saw nothing".
       last_scanned_count: fetched.messages.length,
       last_detail: fetched.detail ?? null,
+      last_diagnostics: diagnostics,
     },
     { onConflict: "user_id" },
   );
@@ -115,6 +120,7 @@ export async function syncMailbox(): Promise<MailSyncResult> {
     ok: fetched.ok,
     failure: fetched.failure,
     detail: fetched.detail,
+    diagnostics,
   };
 }
 
