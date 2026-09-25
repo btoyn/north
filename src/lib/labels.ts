@@ -110,7 +110,7 @@ export const TERRITORIES = [
   "Other",
 ] as const;
 
-/** Timeline filters on a lender, shared by the page and the slide-over. */
+/** Timeline filters on a partner, shared by the page and the slide-over. */
 export const TIMELINE_FILTERS = [
   { key: "all", label: "All activity" },
   { key: "personal", label: "Personal interactions" },

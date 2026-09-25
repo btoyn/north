@@ -82,8 +82,8 @@ export function SignupForm({ requireInvite = false }: { requireInvite?: boolean 
         <CardTitle className="text-lg">Create your account</CardTitle>
         <CardDescription>
           {requireInvite
-            ? "Accounts are by invitation. Your workspace is private — nobody else can see your lenders and notes."
-            : "Your workspace is private — only you can see your lenders and notes."}
+            ? "Accounts are by invitation. Your workspace is private — nobody else can see your partners and notes."
+            : "Your workspace is private — only you can see your partners and notes."}
         </CardDescription>
       </CardHeader>
       <CardContent>

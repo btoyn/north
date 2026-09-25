@@ -9,7 +9,7 @@ import { isUsingDefaultAvailability, withDefaultAvailability, type AvailabilityR
  * The shape of the next couple of weeks: the rules, and what's already spoken
  * for.
  *
- * Shared by the single-lender and group proposal flows so "busy" means one
+ * Shared by the single-partner and group proposal flows so "busy" means one
  * thing. Dates offered to someone else count as busy — offering the same
  * Thursday twice is the one collision this is meant to prevent, and a group
  * ask makes it likelier, not less.
@@ -89,7 +89,7 @@ export async function loadSchedulingWindow(
   /* The real calendar, when it is connected.
    *
    * Merged in rather than replacing the CRM's own blocks: a date already
-   * offered to another lender is not on anyone's Outlook calendar yet, and
+   * offered to another partner is not on anyone's Outlook calendar yet, and
    * offering the same Thursday twice is the collision this list exists to
    * prevent. If Graph can't answer, the source says so and the screen warns —
    * an empty answer must never read as a free week. */

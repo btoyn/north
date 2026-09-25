@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 /**
- * The old lender list. Spheres replaced it.
+ * The old partner list. Spheres replaced it.
  *
  * Kept as a redirect rather than deleted because every filter chip that used to
  * live here was a URL somebody may have bookmarked, and each one has a sphere

@@ -23,9 +23,9 @@ export async function generateMetadata({ params }: { params: Promise<{ key: stri
 }
 
 /**
- * One sphere: its lenders, and whoever you have open.
+ * One sphere: its partners, and whoever you have open.
  *
- * The lender lives in the URL rather than in component state, so the panel
+ * The partner lives in the URL rather than in component state, so the panel
  * survives a refresh and can be linked to — and closing it is a navigation back
  * to the list you were already looking at, not a re-fetch of it.
  */
@@ -90,7 +90,7 @@ export default async function SpherePage({
       }))
     : [];
 
-  /* Closing the panel drops the lender from the URL and keeps everything else. */
+  /* Closing the panel drops the partner from the URL and keeps everything else. */
   const closeParams = new URLSearchParams();
   if (q) closeParams.set("q", q);
   const closeHref = closeParams.toString()
@@ -112,7 +112,7 @@ export default async function SpherePage({
         description={
           sphere.tier
             ? `${sphere.description} · ${TIER_CADENCE[sphere.tier].toLowerCase()} · ${count.covered} of ${count.total} inside the window`
-            : `${sphere.description} · ${count.total} lender${count.total === 1 ? "" : "s"}`
+            : `${sphere.description} · ${count.total} partner${count.total === 1 ? "" : "s"}`
         }
       />
 

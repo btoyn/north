@@ -37,7 +37,7 @@ export function AddLenderForm({
         setDuplicates(result.candidates);
         setPendingInput(input);
       } else if (result?.status === "saved_without_lists") {
-        // The lender exists. Say so plainly rather than showing a red error
+        // The partner exists. Say so plainly rather than showing a red error
         // over a form that would create them a second time.
         setPartial({ lenderId: result.lenderId, message: result.message });
       } else if (result?.status === "error") {
@@ -71,13 +71,13 @@ export function AddLenderForm({
     return (
       <Card>
         <CardContent className="space-y-3 pt-5">
-          <h2 className="font-semibold">Lender saved</h2>
+          <h2 className="font-semibold">Partner saved</h2>
           <p className="text-sm text-muted">{partial.message}</p>
           <p className="text-sm text-muted">
             Add them to the group from their page — nothing else was lost.
           </p>
           <Link
-            href={`/lenders/${partial.lenderId}`}
+            href={`/partners/${partial.lenderId}`}
             className="inline-flex text-sm font-semibold text-primary hover:underline"
           >
             Open their page →
@@ -100,7 +100,7 @@ export function AddLenderForm({
           <ul className="space-y-2">
             {duplicates.map((d) => (
               <li key={d.id} className="rounded-lg border border-border p-3 text-sm">
-                <Link href={`/lenders/${d.id}`} className="font-medium text-primary hover:underline">
+                <Link href={`/partners/${d.id}`} className="font-medium text-primary hover:underline">
                   {d.full_name}
                 </Link>
                 <p className="text-muted">
@@ -269,7 +269,7 @@ export function AddLenderForm({
           {error && <p className="text-sm text-danger">{error}</p>}
 
           <Button type="submit" className="w-full" disabled={pending}>
-            {pending ? "Saving…" : "Save lender"}
+            {pending ? "Saving…" : "Save partner"}
           </Button>
         </form>
       </CardContent>

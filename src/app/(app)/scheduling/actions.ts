@@ -68,7 +68,7 @@ export async function getProposalContext(
       .maybeSingle(),
   ]);
 
-  if (!lender) return { error: "Lender not found." };
+  if (!lender) return { error: "Partner not found." };
 
   const daysSinceContact = lastTouch?.occurred_at
     ? Math.floor((now.getTime() - new Date(lastTouch.occurred_at).getTime()) / 86_400_000)
@@ -148,7 +148,7 @@ export async function saveProposal(
   });
 
   revalidatePath("/dashboard");
-  revalidatePath(`/lenders/${input.lenderId}`);
+  revalidatePath(`/partners/${input.lenderId}`);
   return { id: data.id };
 }
 
@@ -179,7 +179,7 @@ export interface RecordReplyInput {
 /**
  * Records a reply. An accepted date is *not* booked here — booking is a
  * separate, explicit step, so a misread reply can never put a meeting on a
- * lender's calendar on its own.
+ * partner's calendar on its own.
  */
 export async function recordProposalReply(
   input: RecordReplyInput,
@@ -250,7 +250,7 @@ export async function bookProposal(
     .select("full_name, institution_id, territory, email")
     .eq("id", proposal.lender_id)
     .maybeSingle();
-  if (!lender) return { error: "Lender not found." };
+  if (!lender) return { error: "Partner not found." };
 
   const minutes = MEETING_TYPE_DURATIONS[proposal.meeting_type] ?? 60;
   const label = proposal.custom_label?.trim() || proposal.meeting_type.replace(/_/g, " ");
@@ -304,7 +304,7 @@ export async function bookProposal(
     .eq("id", proposalId);
 
   revalidatePath("/dashboard");
-  revalidatePath(`/lenders/${proposal.lender_id}`);
+  revalidatePath(`/partners/${proposal.lender_id}`);
   return {};
 }
 

@@ -1,12 +1,12 @@
 /**
  * Lists someone makes up themselves.
  *
- * Bank, territory and tier are facts about a lender, and the app already
+ * Bank, territory and tier are facts about a partner, and the app already
  * groups on all three. A list is the grouping that exists only in his head:
- * "guys I golf with", "construction lenders", "invite to the Masters party".
+ * "guys I golf with", "construction partners", "invite to the Masters party".
  *
  * One model serves both halves of what was asked for. From the list you see
- * who is on it; from a lender you tick the lists they belong to, which is a
+ * who is on it; from a partner you tick the lists they belong to, which is a
  * tag in everything but name. The rows are the same either way.
  *
  * Pure, so the count on the index and the rows on the detail come from one
@@ -18,7 +18,7 @@ import type { SphereDef, SphereRow } from "./spheres";
 export interface LenderList {
   id: string;
   name: string;
-  /** Lender ids on the list. Order is not meaningful. */
+  /** Partner ids on the list. Order is not meaningful. */
   memberIds: string[];
 }
 
@@ -75,10 +75,10 @@ export function sortLists<T extends { name: string }>(lists: readonly T[]): T[] 
   return [...lists].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
 }
 
-/** "6 lenders", or the empty-list nudge. */
+/** "6 partners", or the empty-list nudge. */
 export function describeList(list: LenderList): string {
   if (list.memberIds.length === 0) return "Nobody on it yet";
-  return `${list.memberIds.length} lender${list.memberIds.length === 1 ? "" : "s"}`;
+  return `${list.memberIds.length} partner${list.memberIds.length === 1 ? "" : "s"}`;
 }
 
 /**
@@ -86,7 +86,7 @@ export function describeList(list: LenderList): string {
  * lists too without knowing they exist.
  *
  * Membership is resolved through a Set rather than `includes`, because the
- * predicate runs once per lender per list and the book is 137 people.
+ * predicate runs once per partner per list and the book is 137 people.
  */
 export function listSphere(list: LenderList): SphereDef {
   const members = new Set(list.memberIds);
@@ -104,7 +104,7 @@ export function listSpheres(lists: readonly LenderList[]): SphereDef[] {
   return sortLists(lists).map(listSphere);
 }
 
-/** The lists a given lender is on, for the panel on their page. */
+/** The lists a given partner is on, for the panel on their page. */
 export function listsContaining(
   lists: readonly LenderList[],
   lenderId: string,

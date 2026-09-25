@@ -148,7 +148,7 @@ export function GroupProposalView({ data }: { data: GroupProposalData }) {
                 {attendees.map((a) => (
                   <tr key={a.lenderId} className="border-b border-hairline last:border-b-0">
                     <td className="py-2.5 pr-3">
-                      <Link href={`/lenders/${a.lenderId}`} className="font-medium hover:underline">
+                      <Link href={`/partners/${a.lenderId}`} className="font-medium hover:underline">
                         {a.name}
                       </Link>
                       {!a.repliedAt && (

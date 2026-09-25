@@ -14,7 +14,7 @@ import { getProposalContext, saveProposal } from "@/app/(app)/scheduling/actions
 import type { ProposalContext } from "@/app/(app)/scheduling/actions";
 
 /**
- * "Propose lunch" — the screen behind the button on every lender (spec §15).
+ * "Propose lunch" — the screen behind the button on every partner (spec §15).
  *
  * Dates are worked out here rather than on the server because availability is
  * wall-clock ("lunches 11 to 1") and the browser is the only place that knows
@@ -127,7 +127,7 @@ function Sheet({
     let alive = true;
     getProposalContext(lenderId).then((r) => {
       if (!alive) return;
-      if (r.error || !r.context) setLoadError(r.error ?? "Could not load this lender.");
+      if (r.error || !r.context) setLoadError(r.error ?? "Could not load this partner.");
       else setContext(r.context);
     });
     return () => {

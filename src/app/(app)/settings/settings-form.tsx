@@ -106,7 +106,7 @@ export function SettingsForm({
                 max={120}
                 defaultValue={prefs.default_contact_goal_days}
               />
-              <FieldHint>Every lender, same goal. Tier changes priority, not the window.</FieldHint>
+              <FieldHint>Every partner, same goal. Tier changes priority, not the window.</FieldHint>
             </div>
             <div>
               <Label htmlFor="grace_days">Grace period (days)</Label>

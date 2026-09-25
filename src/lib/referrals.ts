@@ -1,15 +1,15 @@
 /**
  * Who actually sends you business.
  *
- * A referral is a lender handing you a deal. Whether it funded, died, or is
+ * A referral is a partner handing you a deal. Whether it funded, died, or is
  * still in the air changes what happened to the deal — it does not change the
  * fact that they brought it. So the count of referrals never goes down. A
- * lender who sent three that all fell apart still sent three, and a screen that
+ * partner who sent three that all fell apart still sent three, and a screen that
  * quietly forgets them is telling you the relationship produces nothing when it
  * has produced three times.
  *
  * Referrals arrive two ways and both count:
- *   - a **look**, logged the moment a lender mentions a possible deal;
+ *   - a **look**, logged the moment a partner mentions a possible deal;
  *   - a **loan**, added straight onto Loan updates when a deal shows up
  *     already real enough to be tracked weekly.
  *
@@ -73,7 +73,7 @@ export function dedupeReferrals(referrals: Referral[]): Referral[] {
   return referrals.filter((r) => !(r.kind === "look" && supersededLooks.has(r.id)));
 }
 
-/** Per lender: how many they brought, and how those ended. */
+/** Per partner: how many they brought, and how those ended. */
 export function tallyReferrals(referrals: Referral[]): Map<string, ReferralTally> {
   const byLender = new Map<string, ReferralTally>();
 
@@ -94,7 +94,7 @@ export function tallyReferrals(referrals: Referral[]): Map<string, ReferralTally
   return byLender;
 }
 
-/** Lenders ranked by how much they've brought you, most first. */
+/** Partners ranked by how much they've brought you, most first. */
 export function rankReferrers(
   referrals: Referral[],
   nameOf: (lenderId: string) => string | null,
@@ -111,7 +111,7 @@ export function rankReferrers(
  *
  * The total leads because it is the number that says whether this relationship
  * produces. The breakdown follows because "three died" and "three funded" are
- * very different lenders, and neither is "nothing".
+ * very different partners, and neither is "nothing".
  */
 export function describeReferrals(tally: ReferralTally | undefined): string {
   if (!tally || tally.total === 0) return "None yet";

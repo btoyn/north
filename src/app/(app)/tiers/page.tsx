@@ -19,11 +19,11 @@ import { cn } from "@/lib/utils";
 export const metadata = { title: "Tiers" };
 
 /**
- * Spheres — the front door to the lender book.
+ * Spheres — the front door to the partner book.
  *
  * Tiers first, because how often someone is worth contacting is the decision
  * everything else follows from. Underneath, the filters that used to be a row
- * of chips above the lender list, now named views you can go to.
+ * of chips above the partner list, now named views you can go to.
  */
 export default async function SpheresPage() {
   const [rows, groupProposals, lists] = await Promise.all([
@@ -44,9 +44,9 @@ export default async function SpheresPage() {
     <>
       <PageHeader
         title="Tiers"
-        description={`${rows.length} lender${rows.length === 1 ? "" : "s"}, sorted by who sends you deals`}
+        description={`${rows.length} partner${rows.length === 1 ? "" : "s"}, sorted by who sends you deals`}
         actions={
-          <Link href="/lenders/new" className={buttonVariants({ variant: "primary", size: "md" })}>
+          <Link href="/partners/new" className={buttonVariants({ variant: "primary", size: "md" })}>
             <Plus className="h-4 w-4" /> Add lender
           </Link>
         }
@@ -66,7 +66,7 @@ export default async function SpheresPage() {
       {untiered > 0 && (
         <p className="mb-6 rounded-xl border border-gold-border bg-gold-soft px-4 py-3 text-[13px] leading-relaxed text-[#6d5210]">
           <span className="font-semibold">
-            {untiered} {untiered === 1 ? "lender has" : "lenders have"} no tier yet.
+            {untiered} {untiered === 1 ? "partner has" : "partners have"} no tier yet.
           </span>{" "}
           Until one is set they&apos;re measured against the workspace goal. Open{" "}
           <Link href="/tiers/tier-none" className="font-semibold underline">

@@ -6,19 +6,19 @@ import { useRouter } from "next/navigation";
 import { ExternalLink, X } from "lucide-react";
 
 /**
- * The lender panel on Spheres.
+ * The partner panel on Spheres.
  *
- * Opening a lender shouldn't cost you your place in the list — you are usually
+ * Opening a partner shouldn't cost you your place in the list — you are usually
  * working down a sphere, and coming back to the top of it every time is how a
  * tidy-up session stops being one. So the detail slides over the list and the
  * list stays behind it.
  *
  * The content is a Server Component passed in as children, which is why all of
- * that lender's queries stay on the server: this shell never imports it.
+ * that partner's queries stay on the server: this shell never imports it.
  */
 export function LenderSlideOver({
   name,
-  /** Where Close goes back to — the sphere, without the lender in the URL. */
+  /** Where Close goes back to — the sphere, without the partner in the URL. */
   closeHref,
   lenderId,
   children,
@@ -64,7 +64,7 @@ export function LenderSlideOver({
             {name}
           </h2>
           <Link
-            href={`/lenders/${lenderId}`}
+            href={`/partners/${lenderId}`}
             className="inline-flex min-h-8 items-center gap-1.5 rounded-lg px-2 text-[12.5px] font-medium text-muted transition-colors hover:bg-black/[0.05] hover:text-foreground"
           >
             <ExternalLink className="h-3.5 w-3.5" />

@@ -53,7 +53,7 @@ export interface LookLender {
   institution: string | null;
 }
 
-/** A lender and everything they've sent you, however it ended. */
+/** A partner and everything they've sent you, however it ended. */
 export interface ReferrerRow {
   id: string;
   name: string;
@@ -147,7 +147,7 @@ export function PipelineBoard({
       {rows.length === 0 && !adding && (
         <EmptyState
           title="No looks yet"
-          description="Any time a lender mentions a possible deal — even a vague one, even without a borrower name — log it here and it will come back for follow-up."
+          description="Any time a partner mentions a possible deal — even a vague one, even without a borrower name — log it here and it will come back for follow-up."
           className="py-8"
         />
       )}
@@ -223,7 +223,7 @@ export function PipelineBoard({
                 <li key={l.id} className="flex items-center gap-3">
                   <span className="min-w-0 flex-1">
                     <Link
-                      href={`/lenders/${l.id}`}
+                      href={`/partners/${l.id}`}
                       className="block truncate text-[13.5px] font-medium hover:underline"
                     >
                       {l.name}
@@ -369,13 +369,13 @@ function LookCard({
           <p className="mt-0.5 text-[12px] text-muted">
             {look.lenderId ? (
               <Link
-                href={`/lenders/${look.lenderId}`}
+                href={`/partners/${look.lenderId}`}
                 className="hover:text-foreground hover:underline"
               >
                 {look.lenderName}
               </Link>
             ) : (
-              "No lender linked"
+              "No partner linked"
             )}
             {look.receivedAt && ` · ${relativeDays(look.receivedAt)}`}
           </p>
@@ -471,7 +471,7 @@ function LookCard({
             className="w-full rounded-[10px] border border-border bg-background px-3 py-2 text-[13px] leading-relaxed outline-none transition-colors focus:border-primary/40"
           />
           <p className="text-[11.5px] text-muted">
-            Saved to {look.lenderName ?? "the lender"}&apos;s timeline, counts as a touch, and sets
+            Saved to {look.lenderName ?? "the partner"}&apos;s timeline, counts as a touch, and sets
             the next follow-up.
           </p>
           <div className="flex gap-2">
@@ -572,7 +572,7 @@ function AddLook({ lenders, onDone }: { lenders: LookLender[]; onDone: () => voi
             <button
               type="button"
               onClick={() => setPicked(null)}
-              aria-label="Pick a different lender"
+              aria-label="Pick a different partner"
               className="rounded-lg p-1 text-muted hover:text-foreground"
             >
               <X className="h-4 w-4" />
@@ -587,7 +587,7 @@ function AddLook({ lenders, onDone }: { lenders: LookLender[]; onDone: () => voi
                 value={query}
                 autoFocus
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search lenders…"
+                placeholder="Search partners…"
                 className="pl-9"
               />
             </div>

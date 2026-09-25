@@ -23,7 +23,7 @@ async function currentUserId(): Promise<string | null> {
 
 function revalidate() {
   revalidatePath("/tiers");
-  revalidatePath("/lenders", "layout");
+  revalidatePath("/partners", "layout");
 }
 
 export async function createList(name: string): Promise<{ id?: string; error?: string }> {
@@ -62,7 +62,7 @@ export async function renameList(listId: string, name: string): Promise<{ error?
   return {};
 }
 
-/** Deletes the list. Membership rows go with it; the lenders do not. */
+/** Deletes the list. Membership rows go with it; the partners do not. */
 export async function deleteList(listId: string): Promise<{ error?: string }> {
   const supabase = await createClient();
   const { error } = await supabase.from("lender_lists").delete().eq("id", listId);
@@ -72,7 +72,7 @@ export async function deleteList(listId: string): Promise<{ error?: string }> {
 }
 
 /**
- * Puts a lender on a list, or takes them off.
+ * Puts a partner on a list, or takes them off.
  *
  * One action for both directions because the caller is a checkbox, and a
  * checkbox that has to pick between two endpoints is a checkbox that can get
@@ -111,7 +111,7 @@ export async function setListMembership(
   return {};
 }
 
-/** Creates a list and puts this lender on it, for the "new list" field. */
+/** Creates a list and puts this partner on it, for the "new list" field. */
 export async function createListWithLender(
   name: string,
   lenderId: string,

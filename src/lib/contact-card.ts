@@ -87,7 +87,7 @@ export function formatPhone(raw: string | null | undefined): string | null {
 /**
  * What the card shows, with the falling back already done.
  *
- * Their own address wins over the bank's, because a lender who works out of a
+ * Their own address wins over the bank's, because a partner who works out of a
  * branch two towns from head office is exactly the person you would drive to
  * the wrong building for. The switchboard appears only when there is no direct
  * number, where it is better than nothing and otherwise just noise.

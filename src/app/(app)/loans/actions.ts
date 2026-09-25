@@ -28,7 +28,7 @@ export async function createLoan(input: {
 
   const borrower = input.borrowerName.trim();
   if (!borrower) return { error: "Who's the borrower?" };
-  if (!input.lenderId) return { error: "Pick the lender who sent it over." };
+  if (!input.lenderId) return { error: "Pick the partner who sent it over." };
 
   const { data: lender } = await supabase
     .from("lenders")
@@ -36,7 +36,7 @@ export async function createLoan(input: {
     .eq("id", input.lenderId)
     .is("deleted_at", null)
     .maybeSingle();
-  if (!lender) return { error: "Lender not found." };
+  if (!lender) return { error: "Partner not found." };
 
   // Due immediately: a loan you just started tracking is one you owe an update
   // on, not one that gets a week's grace.
@@ -333,7 +333,7 @@ export async function recordUpdateSent(input: {
   if (error) return { error: error.message };
 
   if (loan.lender_id) {
-    const who = input.toBorrower ? "the lender and the borrower" : "the lender";
+    const who = input.toBorrower ? "the partner and the borrower" : "the partner";
     await supabase.from("activities").insert({
       user_id: user.id,
       lender_id: loan.lender_id,
@@ -360,7 +360,7 @@ export async function recordUpdateSent(input: {
 }
 
 /**
- * Records that the referring lender was brought up to date.
+ * Records that the referring partner was brought up to date.
  *
  * The note is optional but worth typing: it becomes the timeline entry, so in
  * six weeks "what did I last tell Marcus about the Cedar Ridge deal" has an

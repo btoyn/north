@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-/** One-click CSV export (spec §35). /export?entity=lenders — RLS scopes rows
+/** One-click CSV export (spec §35). /export?entity=partners — RLS scopes rows
  *  to the signed-in user automatically. */
 
 const ENTITIES: Record<string, { table: string; columns: string[] }> = {

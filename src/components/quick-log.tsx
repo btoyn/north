@@ -198,7 +198,7 @@ function Sheet({
         .filter((l): l is QuickLogLender => Boolean(l));
     }
     // matchScore already gates weak fuzzy hits internally, so anything above
-    // zero is a real match — same threshold the lender list uses.
+    // zero is a real match — same threshold the partner list uses.
     return data.lenders
       .map((l) => ({
         lender: l,
@@ -316,7 +316,7 @@ function Sheet({
           {selected && (
             <button
               onClick={back}
-              aria-label="Back to lender list"
+              aria-label="Back to partner list"
               className="-ml-1 rounded-lg p-1.5 text-muted transition-colors hover:bg-black/[0.05] hover:text-foreground"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -349,8 +349,8 @@ function Sheet({
                 ref={searchRef}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search lenders…"
-                aria-label="Search lenders"
+                placeholder="Search partners…"
+                aria-label="Search partners"
                 className="h-11 w-full rounded-[10px] border border-border bg-background pl-9 pr-3 text-[14.5px] outline-none transition-colors focus:border-primary/40"
               />
             </div>
@@ -375,7 +375,7 @@ function Sheet({
                     Check the spelling, or add them first.
                   </p>
                   <Link
-                    href="/lenders/new"
+                    href="/partners/new"
                     onClick={onClose}
                     className="mt-3 inline-flex text-[13.5px] font-semibold text-primary hover:underline"
                   >

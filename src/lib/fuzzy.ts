@@ -1,5 +1,5 @@
-/** Tiny trigram-based fuzzy matcher for typo-tolerant lender search (§12).
- *  Fine at this scale (~120 lenders); Postgres pg_trgm takes over if lists grow. */
+/** Tiny trigram-based fuzzy matcher for typo-tolerant partner search (§12).
+ *  Fine at this scale (~120 partners); Postgres pg_trgm takes over if lists grow. */
 
 function trigrams(s: string): Set<string> {
   const padded = `  ${s.toLowerCase().trim()} `;
@@ -21,7 +21,7 @@ export function similarity(a: string, b: string): number {
 }
 
 export interface Searchable {
-  /** Fields in priority order: lender name, institution, email (§12). */
+  /** Fields in priority order: partner name, institution, email (§12). */
   name: string;
   institution?: string | null;
   email?: string | null;

@@ -1,7 +1,7 @@
 /**
  * Tiers — how often each kind of relationship is worth touching.
  *
- * A tier is the answer to "how much of me does this lender get". A and B both
+ * A tier is the answer to "how much of me does this partner get". A and B both
  * get a month: A has sent something, B is the bet that they will. C is a good
  * relationship that has produced nothing in two and a half years, and gets a
  * quarter. D is cold and gets twice a year, purely so they remember he exists.
@@ -14,8 +14,8 @@
  * everybody and is marked as such by `isDealOnly`.
  *
  * The cadence lives here rather than in a column because it is a rule about
- * tiers, not a fact about a lender. Changing what B means should change every
- * B lender at once.
+ * tiers, not a fact about a partner. Changing what B means should change every
+ * B partner at once.
  */
 
 export type Tier = "A" | "B" | "C" | "D" | "unassigned";
@@ -43,7 +43,7 @@ export const TIER_MEANING: Record<Tier, string> = {
  * Contact goal in days, per tier.
  *
  * `unassigned` has no cadence of its own and falls back to the workspace goal
- * from Settings — an untiered lender is an unanswered question, not a quarterly
+ * from Settings — an untiered partner is an unanswered question, not a quarterly
  * one, and quietly filing them at 90 days would hide that.
  */
 export const TIER_GOAL_DAYS: Record<Tier, number | null> = {
@@ -86,7 +86,7 @@ export function readTier(value: string | null | undefined): Tier {
   return value && isTier(value) ? value : "unassigned";
 }
 
-/** How many days this lender's tier allows between touches. */
+/** How many days this partner's tier allows between touches. */
 export function tierGoalDays(tier: string | null | undefined, workspaceGoalDays: number): number {
   return TIER_GOAL_DAYS[readTier(tier)] ?? workspaceGoalDays;
 }
@@ -96,7 +96,7 @@ export interface TierSummary {
   label: string;
   meaning: string;
   cadence: string;
-  /** Lenders in this tier. */
+  /** Partners in this tier. */
   total: number;
   /** Of those, how many are inside their own tier's window. */
   covered: number;
@@ -107,8 +107,8 @@ export interface TierSummary {
 /**
  * Counts and coverage per tier, for the top row of Spheres.
  *
- * Coverage is measured against each tier's own cadence, so an A lender touched
- * three weeks ago reads as behind while a C lender touched the same day reads
+ * Coverage is measured against each tier's own cadence, so an A partner touched
+ * three weeks ago reads as behind while a C partner touched the same day reads
  * as fine. That difference is the entire point of tiering them.
  */
 export function summarizeTiers(
@@ -176,7 +176,7 @@ const CONVERSATION_TYPES: ReadonlySet<string> = new Set([
 export const DEAL_UPDATE_TYPE = "loan_update";
 
 /**
- * Whether this activity restarts the clock for a lender in this tier.
+ * Whether this activity restarts the clock for a partner in this tier.
  *
  * For A and B it has to be a real exchange, or a loan update. For everyone
  * else any contact counts — the point at C and D is that they heard from him,
@@ -209,7 +209,7 @@ function latest(a: string | null, b: string | null): string | null {
 }
 
 /**
- * Which clock this lender's tier is judged against.
+ * Which clock this partner's tier is judged against.
  *
  * C and D go by the last contact of any kind. A and B go by the last one
  * somebody else took part in, or the last loan update, whichever is later.
@@ -226,7 +226,7 @@ export function qualifyingTouchAt(
 }
 
 /**
- * Whether this lender is covered on loan email alone.
+ * Whether this partner is covered on loan email alone.
  *
  * True when the only thing keeping them inside their window is the Friday
  * update: no call, no lunch, no reply, nothing either of you said to the other
@@ -234,7 +234,7 @@ export function qualifyingTouchAt(
  * relationship that exists only while a file is open is worth being able to
  * see before the file closes.
  *
- * False for a lender who is overdue anyway: they are already on the list, and
+ * False for a partner who is overdue anyway: they are already on the list, and
  * saying it twice helps nobody.
  */
 export function isDealOnly(

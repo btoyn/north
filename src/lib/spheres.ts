@@ -1,9 +1,9 @@
 /**
- * Spheres — the saved views that replaced Lenders, Institutions and Needs
+ * Spheres — the saved views that replaced Partners, Institutions and Needs
  * Attention.
  *
- * A sphere is a named slice of the lender table: three tiers first, then the
- * filters that used to sit as a row of chips above the lender list. Same
+ * A sphere is a named slice of the partner table: three tiers first, then the
+ * filters that used to sit as a row of chips above the partner list. Same
  * queries, given names and a front door, so "who in Southern Utah is slipping"
  * is a place you can go rather than two clicks you have to remember.
  *
@@ -16,7 +16,7 @@ import type { CoverageStatus } from "./coverage";
 import { TIER_LABEL, TIER_MEANING, TIERS, type Tier } from "./tiers";
 import { TERRITORIES } from "./labels";
 
-/** Everything any sphere needs to decide whether a lender is in it. */
+/** Everything any sphere needs to decide whether a partner is in it. */
 export interface SphereRow {
   id: string;
   fullName: string;
@@ -159,7 +159,7 @@ export const SPHERES: SphereDef[] = [
   {
     key: "active-loans",
     label: "Active-loan contacts",
-    description: "Lenders with a loan in process right now",
+    description: "Partners with a loan in process right now",
     group: "Momentum",
     layout: "flat",
     match: (row) => row.hasActiveLoan,
@@ -235,7 +235,7 @@ export function findSphere(key: string, extra: readonly SphereDef[] = []): Spher
   return SPHERES.find((s) => s.key === key) ?? extra.find((s) => s.key === key) ?? null;
 }
 
-/** The lenders in one sphere, in the order that sphere wants them. */
+/** The partners in one sphere, in the order that sphere wants them. */
 export function lendersInSphere(rows: SphereRow[], sphere: SphereDef): SphereRow[] {
   const matched = rows.filter(sphere.match);
   return sphere.sort ? [...matched].sort(sphere.sort) : matched;

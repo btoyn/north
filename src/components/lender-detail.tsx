@@ -27,10 +27,10 @@ import {
   ROLE_TYPE_LABELS,
 } from "@/lib/labels";
 import { cn, formatDate, formatDateTime, relativeDays } from "@/lib/utils";
-import { LenderTools } from "@/app/(app)/lenders/[id]/lender-tools";
+import { LenderTools } from "@/app/(app)/partners/[id]/lender-tools";
 
 /**
- * One lender, everything about them.
+ * One partner, everything about them.
  *
  * Lives here rather than in the route so the Spheres slide-over can render the
  * same thing without a second implementation drifting away from it. It is a
@@ -65,7 +65,7 @@ export async function LenderDetail({
   if (!lender) {
     return (
       <EmptyState
-        title="That lender isn't here"
+        title="That partner isn't here"
         description="They may have been deleted. Trash keeps them for 90 days."
       />
     );
@@ -125,7 +125,7 @@ export async function LenderDetail({
     getLenderLists(),
   ]);
 
-  // Measured against this lender's tier, not a flat 30 days.
+  // Measured against this partner's tier, not a flat 30 days.
   const coverage = lenderCoverage(
     {
       lastVisibleTouchAt: coverageRow?.last_visible_touch_at ?? null,
@@ -147,7 +147,7 @@ export async function LenderDetail({
   // in the referral tally below, which counts loans as well.
   const openLooks = (opportunities ?? []).filter((o) => isLookOpen(o.stage));
 
-  /* What this lender has actually sent you. Looks and loans both count, and a
+  /* What this partner has actually sent you. Looks and loans both count, and a
      deal that died counts the same as one that funded — they still brought it.
      Most loans never pass through a logged look, so counting looks alone
      under-reports the people who send the most. */

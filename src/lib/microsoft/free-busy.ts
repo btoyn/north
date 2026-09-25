@@ -33,7 +33,7 @@ export interface BusyBlockIso {
  * Statuses that actually block a lunch.
  *
  * `free` obviously doesn't. `tentative` does: a pencilled-in meeting is not a
- * slot to offer a lender, and being wrong in that direction costs nothing
+ * slot to offer a partner, and being wrong in that direction costs nothing
  * while the other direction double-books him. `workingElsewhere` is left out —
  * he can take a lunch from anywhere.
  */

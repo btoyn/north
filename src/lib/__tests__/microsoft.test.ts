@@ -149,7 +149,7 @@ describe("busyBlocksFromSchedule", () => {
   });
 
   it("counts tentative as busy", () => {
-    // Pencilled in is not a slot to offer a lender.
+    // Pencilled in is not a slot to offer a partner.
     const blocks = busyBlocksFromSchedule([
       entry([
         {

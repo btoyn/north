@@ -9,8 +9,8 @@ import { cn } from "@/lib/utils";
  * Timeline filter chips.
  *
  * Builds its links from whatever URL it finds itself on, so the same chips work
- * on the lender page (`/lenders/x?timeline=deals`) and inside the Spheres
- * slide-over (`/tiers/tier-a?lender=x&timeline=deals`) without either screen
+ * on the partner page (`/partners/x?timeline=deals`) and inside the Spheres
+ * slide-over (`/tiers/tier-a?partner=x&timeline=deals`) without either screen
  * having to hand down a base path.
  */
 export function TimelineFilter({ active }: { active: string }) {

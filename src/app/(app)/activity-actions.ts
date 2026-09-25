@@ -72,7 +72,7 @@ export async function logActivity(
     }
   }
 
-  revalidatePath(`/lenders/${input.lenderId}`);
+  revalidatePath(`/partners/${input.lenderId}`);
   revalidatePath("/tiers", "layout");
   revalidatePath("/dashboard");
   return { activityId: inserted.id };
@@ -104,7 +104,7 @@ export async function quickLogTouch(input: {
     dueAt?: string;
   };
 }): Promise<{ activityId?: string; error?: string }> {
-  if (!input.lenderId) return { error: "Pick a lender first." };
+  if (!input.lenderId) return { error: "Pick a partner first." };
 
   const logged = await logActivity({
     lenderId: input.lenderId,
@@ -160,7 +160,7 @@ export async function undoQuickLog(activityId: string): Promise<{ error?: string
 
   // logActivity ticks this week's plan item when a personal touch lands, so undo
   // has to untick it — but only if nothing else this week still covers the
-  // lender, or a real touch gets erased along with the mis-tap.
+  // partner, or a real touch gets erased along with the mis-tap.
   if (activity && isPersonalTouch(activity.activity_type)) {
     const weekStart = currentWeekStart();
     const { count } = await supabase
@@ -188,7 +188,7 @@ export async function undoQuickLog(activityId: string): Promise<{ error?: string
     }
   }
 
-  // The touch could have moved coverage, the weekly plan, and a lender page at
+  // The touch could have moved coverage, the weekly plan, and a partner page at
   // once. Undo is rare enough that the blunt instrument is the right one.
   revalidatePath("/", "layout");
   return {};
@@ -216,7 +216,7 @@ export async function addPromise(input: {
   });
   if (error) return { error: error.message };
 
-  revalidatePath(`/lenders/${input.lenderId}`);
+  revalidatePath(`/partners/${input.lenderId}`);
   revalidatePath("/follow-ups");
   revalidatePath("/dashboard");
   return {};

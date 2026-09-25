@@ -1,5 +1,5 @@
 /**
- * Grouping for the Lenders list: territory, then institution.
+ * Grouping for the Partners list: territory, then institution.
  *
  * A flat list of 141 names is unreadable, but grouping only helps if the groups
  * are worth collapsing. In this book 11 banks hold 112 of the 141 people, so the
@@ -12,7 +12,7 @@
  * "Zions, Wasatch Front".
  *
  * Pure and generic over the row type, so it can be tested without a database and
- * the UI can hand it whole lender objects.
+ * the UI can hand it whole partner objects.
  */
 
 /** The only fields grouping cares about. */
@@ -111,7 +111,7 @@ export function groupLenders<T>(
 
   return [...sections.values()].sort(
     (a, b) =>
-      // Unplaced lenders last, however many there are — they are a data gap,
+      // Unplaced partners last, however many there are — they are a data gap,
       // not a territory.
       Number(a.territory === NO_TERRITORY) - Number(b.territory === NO_TERRITORY) ||
       b.total - a.total ||

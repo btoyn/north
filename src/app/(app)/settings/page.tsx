@@ -134,7 +134,7 @@ export default async function SettingsPage({
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Import a lender list</CardTitle>
+            <CardTitle className="text-base">Import a partner list</CardTitle>
             <CardDescription>
               Bring in a spreadsheet of lenders. You&apos;ll review the column mapping and any
               duplicates before anything is saved.

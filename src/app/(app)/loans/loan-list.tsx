@@ -108,7 +108,7 @@ export function LoanList({ rows, lenders }: { rows: LoanRow[]; lenders: LoanLend
               {book.active.length === 0 && !adding ? (
                 <EmptyState
                   title="No loans being tracked"
-                  description="Add one and it starts asking for a weekly update. Logging that update also counts as a touch with the lender who sent it over."
+                  description="Add one and it starts asking for a weekly update. Logging that update also counts as a touch with the partner who sent it over."
                   className="py-8"
                 />
               ) : (
@@ -251,13 +251,13 @@ function ApprovedItem({ loan }: { loan: LoanRow }) {
           <p className="mt-0.5 text-[12.5px] text-muted">
             {loan.lenderId ? (
               <Link
-                href={`/lenders/${loan.lenderId}`}
+                href={`/partners/${loan.lenderId}`}
                 className="hover:text-foreground hover:underline"
               >
                 {loan.lenderName}
               </Link>
             ) : (
-              "No lender linked"
+              "No partner linked"
             )}
             {loan.institution && ` · ${loan.institution}`}
           </p>
@@ -356,7 +356,7 @@ function AddLoan({ lenders, onDone }: { lenders: LoanLender[]; onDone: () => voi
             <button
               type="button"
               onClick={() => setPicked(null)}
-              aria-label="Pick a different lender"
+              aria-label="Pick a different partner"
               className="rounded-lg p-1 text-muted hover:text-foreground"
             >
               <X className="h-4 w-4" />
@@ -370,7 +370,7 @@ function AddLoan({ lenders, onDone }: { lenders: LoanLender[]; onDone: () => voi
                 id="loan-lender"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search lenders…"
+                placeholder="Search partners…"
                 className="pl-9"
               />
             </div>
@@ -442,11 +442,11 @@ function LoanItem({ loan }: { loan: LoanRow }) {
           <p className="text-[14.5px] font-semibold">{loan.borrower}</p>
           <p className="mt-0.5 text-[12.5px] text-muted">
             {loan.lenderId ? (
-              <Link href={`/lenders/${loan.lenderId}`} className="hover:text-foreground hover:underline">
+              <Link href={`/partners/${loan.lenderId}`} className="hover:text-foreground hover:underline">
                 {loan.lenderName}
               </Link>
             ) : (
-              "No lender linked"
+              "No partner linked"
             )}
             {loan.institution && ` · ${loan.institution}`}
           </p>
@@ -485,7 +485,7 @@ function LoanItem({ loan }: { loan: LoanRow }) {
                 variant="quiet"
                 onClick={() => setPanel((p) => (p === "handoff" ? null : "handoff"))}
                 disabled={pending}
-                title="Write the approval email to the lender, and mark it approved"
+                title="Write the approval email to the partner, and mark it approved"
               >
                 <Check className="h-3.5 w-3.5" /> Approved + email
               </Button>

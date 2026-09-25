@@ -41,7 +41,7 @@ describe("firstDraft", () => {
     signature: "Brandon Toynbee\nBusiness Development Officer",
   });
 
-  it("greets the lender by first name", () => {
+  it("greets the partner by first name", () => {
     expect(draft).toContain("Hey Joe,");
     expect(draft).not.toContain("Whitfield");
   });

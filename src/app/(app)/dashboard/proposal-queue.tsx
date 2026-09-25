@@ -102,7 +102,7 @@ function DecisionRow({ proposal }: { proposal: ProposalRow }) {
         <Avatar name={proposal.lenderName} size="md" status="inbound" />
         <div className="min-w-0 flex-1">
           <p className="text-[14.5px] font-semibold">
-            <Link href={`/lenders/${proposal.lenderId}`} className="hover:underline">
+            <Link href={`/partners/${proposal.lenderId}`} className="hover:underline">
               {proposal.lenderName}
             </Link>{" "}
             <span className="font-normal text-muted">
@@ -196,7 +196,7 @@ function WaitingRow({ proposal, chaseDays }: { proposal: ProposalRow; chaseDays:
         />
         <div className="min-w-0 flex-1">
           <p className="truncate text-[14px] font-semibold">
-            <Link href={`/lenders/${proposal.lenderId}`} className="hover:underline">
+            <Link href={`/partners/${proposal.lenderId}`} className="hover:underline">
               {proposal.lenderName}
             </Link>
           </p>

@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 /**
- * Lender avatar. Tints come from a controlled five-colour palette — pale blue,
+ * Partner avatar. Tints come from a controlled five-colour palette — pale blue,
  * teal, plum, gold, slate — so a long list stays calm and nothing reads as a
  * random bright colour.
  */
@@ -37,7 +37,7 @@ export function initialsOf(name: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-/** Stable per-name tint so the same lender always looks the same. */
+/** Stable per-name tint so the same partner always looks the same. */
 function tintFor(name: string): string {
   let hash = 0;
   for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) % 9973;

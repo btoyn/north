@@ -367,7 +367,7 @@ export function ImportWizard({
             Back
           </Button>
           <Button onClick={runImport} disabled={pending || (hasSampleData && !confirmSampleRemoval)}>
-            {pending ? "Importing…" : `Import ${mappedRows.length} lenders`}
+            {pending ? "Importing…" : `Import ${mappedRows.length} partners`}
           </Button>
         </div>
         {hasSampleData && !confirmSampleRemoval && (

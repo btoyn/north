@@ -7,9 +7,9 @@ import { PipelineBoard, type LookLender, type LookRow } from "./pipeline-board";
 export const metadata = { title: "Pipeline" };
 
 /**
- * Every possible deal a lender has raised, and how far it got.
+ * Every possible deal a partner has raised, and how far it got.
  *
- * This is the closest thing the app has to an outcome measure: a lender who
+ * This is the closest thing the app has to an outcome measure: a partner who
  * keeps reaching out is a relationship that works, and one who never does is a
  * lunch habit. The board shows both — what's moving, and who it came from.
  */
@@ -115,7 +115,7 @@ export default async function PipelinePage() {
     <>
       <PageHeader
         title="Pipeline"
-        description="Every time a lender brought up a possible deal — a real referral, a question, or a maybe. Drag a card as it moves."
+        description="Every time a partner brought up a possible deal — a real referral, a question, or a maybe. Drag a card as it moves."
       />
       <PipelineBoard rows={rows} lenders={lenderOptions} topLenders={topLenders} />
     </>

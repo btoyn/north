@@ -9,7 +9,7 @@ and reads as plain markdown on GitHub. Editing it updates both.
 
 ## How coverage works
 
-The app keeps a running clock on every lender, counting from the last time you actually spoke —
+The app keeps a running clock on every partner, counting from the last time you actually spoke —
 never a calendar reset. Past the line, they surface. Inside it, they stay out of your way. You never
 decide who to call; the app ranks them worst-first and tells you why.
 
@@ -22,13 +22,13 @@ decide who to call; the app ranks them worst-first and tells you why.
 | Never contacted | — | Same urgency as overdue |
 
 - Goal window and grace are adjustable in Settings — 30 and 10 are defaults.
-- **A confirmed future meeting covers a lender the moment you book it.** Cancel it and the clock
+- **A confirmed future meeting covers a partner the moment you book it.** Cancel it and the clock
   silently resumes from your last real conversation.
 
-### Two clocks per lender
+### Two clocks per partner
 
 **Overall** counts anything that reached them, mass email included. **Personal** counts one-to-one
-only. Send a newsletter to 80 lenders and their overall clock resets while personal keeps counting —
+only. Send a newsletter to 80 partners and their overall clock resets while personal keeps counting —
 the app calls that **Campaign only** and treats it as the gap it is. Every headline number runs on
 the *personal* clock.
 
@@ -54,11 +54,11 @@ The dashboard is ordered by urgency. Read down.
 
 | Card | What it tells you |
 |---|---|
-| Personal coverage | Share of active lenders with a real one-to-one touch inside the window, plus the change since last week. The number to care about. |
+| Personal coverage | Share of active partners with a real one-to-one touch inside the window, plus the change since last week. The number to care about. |
 | Weekly loan communication | Reads as `3/5`. Every active loan gets a weekly touch *even when nothing changed* — silence is what makes referral partners nervous. |
 | Meetings | Confirmed meetings ahead, when the next is, how many await notes. |
 
-Approval volume and dollars deliberately aren't here. This app tracks **lenders**, not loans — your
+Approval volume and dollars deliberately aren't here. This app tracks **partners**, not loans — your
 production numbers live in the system you already use for them.
 
 Below those: an **eight-week coverage line**, rebuilt from your activity on every page load (so
@@ -106,11 +106,11 @@ If nobody answers within four days (adjustable), the proposal turns up on your d
 
 | Button | What it does |
 |---|---|
-| Draft email | Opens Outlook addressed to them. You send it as yourself so replies land in your normal thread history; the app then asks whether it went out and logs it. It deliberately never sends lender mail on your behalf — system-address mail reads as bulk and hurts deliverability. |
+| Draft email | Opens Outlook addressed to them. You send it as yourself so replies land in your normal thread history; the app then asks whether it went out and logs it. It deliberately never sends partner mail on your behalf — system-address mail reads as bulk and hurts deliverability. |
 | Text | Opens Messages with their number, then offers to log it. |
 | Invite to lunch | Opens the scheduling screen described above. |
 | Schedule | Same screen, for any kind of meeting. Durations default: lunch and breakfast 60 min, golf 150, office visits 15. |
-| Replace | Drops them from this week and promotes the next lender on deck into the slot. Nothing is deleted — you're saying "not now." |
+| Replace | Drops them from this week and promotes the next partner on deck into the slot. Nothing is deleted — you're saying "not now." |
 
 ## Keeping referral partners informed
 
@@ -144,7 +144,7 @@ press send there. **That click marks the week done and restarts the clock** — 
 whether you actually sent it, so if you get pulled away, that week still reads as done. If the email
 is long enough that Outlook might truncate it, the button steps aside and tells you to use **Copy**.
 
-Each update lands on the lender's timeline and **counts as a personal touch**, so keeping a partner
+Each update lands on the partner's timeline and **counts as a personal touch**, so keeping a partner
 informed and keeping the relationship warm are the same act.
 
 Two ways a loan ends:
@@ -160,9 +160,9 @@ and the count of how many reached closing sits in that heading. You can put any 
 Set your signature in **Settings → Email signature**. It only seeds the first draft on each loan;
 after that your own edits carry forward.
 
-## When a lender mentions a deal
+## When a partner mentions a deal
 
-**Pipeline** in the sidebar. Any time a lender brings up a possible deal — a real referral, a
+**Pipeline** in the sidebar. Any time a partner brings up a possible deal — a real referral, a
 question about whether something would qualify, a vague *"I might have one for you"* — log it. Pick
 who brought it up, type what they asked, done. **A borrower name is optional**, because most of the
 time there isn't one yet.
@@ -183,10 +183,10 @@ arrows on the card — the arrows are the ones that work on a phone.
 a list under the board rather than a fourth column, because over time there are more of them than
 everything else put together.
 
-Logging a look **counts as a personal touch** — a lender who just brought you a deal shouldn't show
+Logging a look **counts as a personal touch** — a partner who just brought you a deal shouldn't show
 up as needing attention the next morning.
 
-Two things fall out of this for free. **Who's reaching out** ranks your lenders by how many looks
+Two things fall out of this for free. **Who's reaching out** ranks your partners by how many looks
 they've brought you, and each profile shows a **Looks given** count. That's the closest thing here to
 an honest answer about which relationships produce and which are all lunch and no loans — the
 original plan called it the one number worth measuring.
@@ -207,19 +207,19 @@ on the profile and never expiring, because a coverage clock resets constantly bu
 plays club soccer for years. Also set their preferred contact method; the weekly list's suggested
 action follows it. This is the material AI drafting draws on once it's switched on.
 
-**Handle bank changes.** Profile → *Changed banks?* The lender keeps their entire history —
+**Handle bank changes.** Profile → *Changed banks?* The partner keeps their entire history —
 conversations, promises, personal notes — and only the current institution changes. The old bank
 stays in their history, and the app flags it, since that branch may now need a replacement contact.
 
 ## Finding people — Tiers
 
 **Tiers** is your whole referral book sorted by who actually sends you deals, with its other useful
-slices given names. It replaced three separate screens (Lenders, Institutions, Needs Attention)
+slices given names. It replaced three separate screens (Partners, Institutions, Needs Attention)
 that were all doors into the same table.
 
 ### The four tiers
 
-Every lender has a tier, and the tier decides how often they're worth contacting:
+Every partner has a tier, and the tier decides how often they're worth contacting:
 
 | Tier | Who | How often |
 |---|---|---|
@@ -237,13 +237,13 @@ The top row is one card per tier with its count and a coverage bar, and the bar 
 that tier's own window — so 70% on A is a harder number than 70% on C. Everything else in the app
 that says "overdue" means overdue *for their tier*.
 
-Set a tier from the **A / B / C / D / None** buttons at the top of a lender's panel. Anyone still
+Set a tier from the **A / B / C / D / None** buttons at the top of a partner's panel. Anyone still
 untiered is measured against the workspace goal rather than quietly filed as quarterly, and the page
 tells you how many are waiting.
 
 ### Saved views
 
-Under the tiers, the filters that used to be a row of chips above the lender list:
+Under the tiers, the filters that used to be a row of chips above the partner list:
 
 | View | Who's in it |
 |---|---|
@@ -271,14 +271,14 @@ Every sphere has typo-tolerant search across names and banks (*Whitfeild* finds 
 always shows a flat list — results are ranked by how well each name matched, and grouping would
 throw that order away.
 
-### The lender panel
+### The partner panel
 
 Clicking anyone in a sphere slides their profile over the list instead of navigating away, so you
 keep your place and how far down you had scrolled. Everything from the full profile is in there —
 timeline, promises, looks, personal details, the lot — plus the tier buttons. **Full page** opens it
 as its own page when you want to link to someone or work in the wide layout.
 
-A bank's own page still exists at its own address: open a lender and follow their institution, which
+A bank's own page still exists at its own address: open a partner and follow their institution, which
 is also where **Propose a group meeting** lives.
 
 ## Settings & import
@@ -294,13 +294,13 @@ is also where **Propose a group meeting** lives.
 correct the column matching it guessed → review the count, likely duplicates, and suggested tags
 pulled from your notes column (mention golf or BYU and it offers to file those as personal details;
 your original note text is always kept) → import and get a report. If sample data is still present it
-offers to clear it first, so demo and real lenders never mix.
+offers to clear it first, so demo and real partners never mix.
 
 ## Safety net
 
 - **Nothing deletes immediately.** Deleting moves a record to **Trash**, restorable for 90 days.
-  Delete the wrong lender and their whole history returns.
-- **Your data is exportable** — one-click CSV for lenders, institutions, activities, tasks, promises,
+  Delete the wrong partner and their whole history returns.
+- **Your data is exportable** — one-click CSV for partners, institutions, activities, tasks, promises,
   referrals, and active loans.
 - **Private by default.** The database enforces per-person access at its own level, not just in the
   app. An audit log records what changed and whether it was you, the assistant, or automation.
@@ -312,9 +312,9 @@ offers to clear it first, so demo and real lenders never mix.
 | Task | Where |
 |---|---|
 | Log a call I just had | Profile → Log activity → Call |
-| Add a lender | Add, or Tiers → Add lender. Checks duplicates as you type. |
+| Add a partner | Add, or Tiers → Add partner. Checks duplicates as you type. |
 | Record something I owe | Profile → Add promise → I promised → due date |
-| Log a deal a lender mentioned | Pipeline → Log a look. Borrower name optional. |
+| Log a deal a partner mentioned | Pipeline → Log a look. Borrower name optional. |
 | See who actually sends me deals | Pipeline → Who's reaching out |
 | See who's slipping | Tiers → Needs contact, or the Overdue band on the status bar |
 | Plan a St. George trip | Tiers → Southern Utah |
@@ -360,14 +360,14 @@ other is the only touch that gives a banker something instead of asking for thei
 
 ## What it takes to stop pasting
 
-**The goal, stated plainly:** a lender replies, the app reads it, and it only comes to you if it
+**The goal, stated plainly:** a partner replies, the app reads it, and it only comes to you if it
 actually needs your call. No pasting, no checking. Scheduling comes off your plate.
 
 That is the point of the whole project. Everything below is what stands between here and there.
 
 ### 1. Somewhere the app can read the replies — removes the paste
 
-Nothing in software can read a lender's reply without access to where that reply landed. Two ways,
+Nothing in software can read a partner's reply without access to where that reply landed. Two ways,
 easier ask first:
 
 | Route | The ask | Trade-off |
@@ -399,7 +399,7 @@ scheduling — plan for both.
 
 IT has deployed the Claude add-in for Outlook, which is a different thing from the items above — it
 sits in the Outlook sidebar, for you, and North cannot talk to it. But it is useful today. Open a
-lender's reply and ask it what they are proposing; ask it to draft the lunch email in your voice. You
+partner's reply and ask it what they are proposing; ask it to draft the lunch email in your voice. You
 still move the text across by hand, so it does not remove the paste — it just means the drafting and
 reading you want are available now rather than after the approvals land.
 
@@ -431,7 +431,7 @@ lets it send the actual meeting invitation once a date is agreed.
 3. **Add your email signature** in Settings → *Email signature*. It is blank, so the first
    loan-update draft on each loan has no sign-off. After the first one your own text carries forward,
    so this is a one-time thing.
-4. **Twelve lenders have no email address.** They cannot receive a meeting proposal or a loan update
+4. **Twelve partners have no email address.** They cannot receive a meeting proposal or a loan update
    — the draft screen says so rather than sending something broken. Worth filling in as you come
    across them.
 

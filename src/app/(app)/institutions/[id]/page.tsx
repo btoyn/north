@@ -75,7 +75,7 @@ export default async function InstitutionProfilePage({
                 {(lenders ?? []).map((l) => (
                   <li key={l.id}>
                     <Link
-                      href={`/lenders/${l.id}`}
+                      href={`/partners/${l.id}`}
                       className="flex items-center justify-between py-2.5 hover:text-primary"
                     >
                       <span className="font-medium">{l.full_name}</span>

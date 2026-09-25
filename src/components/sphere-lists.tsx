@@ -11,10 +11,10 @@ import type { CoverageStatus } from "@/lib/coverage";
 import { cn } from "@/lib/utils";
 
 /**
- * The two ways a sphere lists its lenders: flat, or grouped by territory and
+ * The two ways a sphere lists its partners: flat, or grouped by territory and
  * bank.
  *
- * Both open the lender in the slide-over by putting them in the URL rather than
+ * Both open the partner in the slide-over by putting them in the URL rather than
  * navigating away, so the list — and how far down it you had scrolled — is
  * still there behind the panel.
  */
@@ -36,14 +36,14 @@ export interface SphereListLender {
   dealOnly: boolean;
 }
 
-/** Adds the lender to the current URL, keeping the search and the sphere. */
+/** Adds the partner to the current URL, keeping the search and the sphere. */
 function useLenderHref(): (id: string) => string {
   const pathname = usePathname();
   const params = useSearchParams();
   return (id: string) => {
     const next = new URLSearchParams(params.toString());
     next.set("lender", id);
-    // A panel opened on a fresh lender starts on their whole timeline.
+    // A panel opened on a fresh partner starts on their whole timeline.
     next.delete("timeline");
     return `${pathname}?${next.toString()}`;
   };
@@ -220,7 +220,7 @@ export function GroupedLenderList({
 }
 
 /**
- * Marks a lender the Friday email is carrying on its own.
+ * Marks a partner the Friday email is carrying on its own.
  *
  * Deliberately quiet: they are covered, so this is a note rather than a
  * warning. It sits beside the name so it reads as something true about the

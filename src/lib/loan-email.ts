@@ -21,7 +21,7 @@ export function firstName(fullName: string | null | undefined): string {
  * The subject line, dated.
  *
  * Dated rather than constant, so each week arrives as its own message in the
- * lender's inbox instead of collapsing into one long thread.
+ * partner's inbox instead of collapsing into one long thread.
  */
 export function updateSubject(borrowerName: string, on: Date): string {
   const date = on.toLocaleDateString("en-US", { month: "short", day: "numeric" });

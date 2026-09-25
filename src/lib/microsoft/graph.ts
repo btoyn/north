@@ -119,7 +119,7 @@ export interface CreateEventInput {
 }
 
 /**
- * Puts the confirmed meeting on the calendar and invites the lenders.
+ * Puts the confirmed meeting on the calendar and invites the partners.
  *
  * Only ever called from Confirm, which is a button a human presses. Nothing in
  * this app books a meeting on its own.

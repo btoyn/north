@@ -1,10 +1,10 @@
 import { LenderDetail } from "@/components/lender-detail";
 
 /**
- * A lender on their own page.
+ * A partner on their own page.
  *
  * Spheres opens the same thing in a slide-over; this route stays because a
- * lender is worth linking to, and the panel's "Open full page" has to go
+ * partner is worth linking to, and the panel's "Open full page" has to go
  * somewhere.
  */
 export default async function LenderProfilePage({

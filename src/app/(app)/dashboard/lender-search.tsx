@@ -18,7 +18,7 @@ export interface SearchableLender {
   email: string | null;
   tier: string;
   coverageStatus: CoverageStatus;
-  /** Any touch, campaign included — the same figure the lender list shows. */
+  /** Any touch, campaign included — the same figure the partner list shows. */
   daysSinceTouch: number | null;
 }
 
@@ -28,12 +28,12 @@ const MAX_RESULTS = 6;
 /**
  * Jump straight to a person from the dashboard.
  *
- * The whole list is already on the page — the dashboard loads every lender to
+ * The whole list is already on the page — the dashboard loads every partner to
  * work out coverage — so matching happens in the browser with no round trip.
  * Typing gives answers on the keystroke, which is the difference between a
  * search box people use and one they scroll past on their way to the nav.
  *
- * Fuzzy, by name, bank or email, using the same scorer as the lender list and
+ * Fuzzy, by name, bank or email, using the same scorer as the partner list and
  * the quick-log sheet. One definition of "matches", so the same three letters
  * find the same person wherever they are typed.
  */
@@ -90,7 +90,7 @@ export function LenderSearch({ lenders }: { lenders: SearchableLender[] }) {
   function go(id: string) {
     setOpen(false);
     setQuery("");
-    router.push(`/lenders/${id}`);
+    router.push(`/partners/${id}`);
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -130,8 +130,8 @@ export function LenderSearch({ lenders }: { lenders: SearchableLender[] }) {
         }}
         onFocus={() => setOpen(true)}
         onKeyDown={onKeyDown}
-        placeholder="Search lenders by name, bank or email"
-        aria-label="Search lenders"
+        placeholder="Search partners by name, bank or email"
+        aria-label="Search partners"
         role="combobox"
         aria-expanded={showResults}
         aria-controls="lender-search-results"

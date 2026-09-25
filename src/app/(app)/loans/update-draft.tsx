@@ -164,7 +164,7 @@ export function UpdateDraft({
         <p className="text-[13.5px]">
           {ctx.lenderEmail ?? (
             <span className="text-danger">
-              {ctx.lenderName ?? "This lender"} has no email address on file
+              {ctx.lenderName ?? "This partner"} has no email address on file
             </span>
           )}
         </p>

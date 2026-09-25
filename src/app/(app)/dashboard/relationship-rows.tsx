@@ -22,7 +22,7 @@ import { logActivity } from "../activity-actions";
 import { replacePlanItem } from "./actions";
 import { ProposeMeeting } from "@/components/propose-meeting";
 
-/** Why this lender surfaced, as a short chip rather than a sentence. */
+/** Why this partner surfaced, as a short chip rather than a sentence. */
 export interface ReasonChip {
   label: string;
   tone: "blue" | "gold" | "red" | "teal" | "plum" | "slate";
@@ -209,7 +209,7 @@ function Row({ row, alt }: { row: RelationshipRow; alt: boolean }) {
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
             <Link
-              href={`/lenders/${row.lenderId}`}
+              href={`/partners/${row.lenderId}`}
               className="text-[15.5px] font-semibold leading-tight transition-colors hover:text-primary"
             >
               {row.name}
@@ -319,7 +319,7 @@ function Row({ row, alt }: { row: RelationshipRow; alt: boolean }) {
                     Replace this week
                   </button>
                   <Link
-                    href={`/lenders/${row.lenderId}`}
+                    href={`/partners/${row.lenderId}`}
                     className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-[13.5px] transition-colors hover:bg-primary-soft"
                   >
                     <Mail className="h-4 w-4 text-muted" />

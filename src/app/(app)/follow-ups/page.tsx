@@ -15,7 +15,7 @@ type LenderRef = { id: string; full_name: string } | null;
 function LenderLink({ lender }: { lender: LenderRef }) {
   if (!lender) return null;
   return (
-    <Link href={`/lenders/${lender.id}`} className="text-primary hover:underline">
+    <Link href={`/partners/${lender.id}`} className="text-primary hover:underline">
       {lender.full_name}
     </Link>
   );
@@ -76,7 +76,7 @@ export default async function FollowUpsPage() {
         <Card className="border-primary/20">
           <CardHeader>
             <CardTitle className="text-base">I promised</CardTitle>
-            <CardDescription>Things you told lenders you&apos;d do.</CardDescription>
+            <CardDescription>Things you told partners you&apos;d do.</CardDescription>
           </CardHeader>
           <CardContent>
             {iPromised.length === 0 ? (
@@ -102,11 +102,11 @@ export default async function FollowUpsPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base">They promised</CardTitle>
-            <CardDescription>Things lenders said they&apos;d send or do.</CardDescription>
+            <CardDescription>Things partners said they&apos;d send or do.</CardDescription>
           </CardHeader>
           <CardContent>
             {theyPromised.length === 0 ? (
-              <EmptyState title="Nothing pending from lenders" className="py-6" />
+              <EmptyState title="Nothing pending from partners" className="py-6" />
             ) : (
               <ul className="divide-y divide-border">
                 {theyPromised.map((p) => (

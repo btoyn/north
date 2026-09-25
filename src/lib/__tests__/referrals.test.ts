@@ -47,7 +47,7 @@ describe("credit survives the deal dying", () => {
   });
 
   it("counts three dead deals as three referrals", () => {
-    // The point of the whole file: a lender who sent three that all collapsed
+    // The point of the whole file: a partner who sent three that all collapsed
     // still sent three.
     const tally = tallyReferrals([
       loan("l1", "dave", "died"),
@@ -84,7 +84,7 @@ describe("dedupeReferrals", () => {
 });
 
 describe("tallyReferrals", () => {
-  it("splits a lender's deals by what became of them", () => {
+  it("splits a partner's deals by what became of them", () => {
     const tally = tallyReferrals([
       loan("l1", "dave", "funded"),
       loan("l2", "dave", "died"),
@@ -95,7 +95,7 @@ describe("tallyReferrals", () => {
     expect(tally.get("mike")).toMatchObject({ total: 1, funded: 1 });
   });
 
-  it("ignores a deal with no lender on it", () => {
+  it("ignores a deal with no partner on it", () => {
     const orphan: Referral = { id: "l1", lenderId: null, kind: "loan", outcome: "died" };
     expect(tallyReferrals([orphan]).size).toBe(0);
   });
@@ -148,7 +148,7 @@ describe("describeReferrals", () => {
     );
   });
 
-  it("handles a lender who hasn't sent anything", () => {
+  it("handles a partner who hasn't sent anything", () => {
     expect(describeReferrals(undefined)).toBe("None yet");
     expect(describeReferrals({ lenderId: "dave", total: 0, funded: 0, died: 0, open: 0 })).toBe(
       "None yet",

@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { createListWithLender, setListMembership } from "@/app/(app)/lists/actions";
 
 /**
- * The lists this lender is on, and a way to change that without leaving.
+ * The lists this partner is on, and a way to change that without leaving.
  *
  * Reads as tagging even though it is membership underneath: the lists already
  * on them are chips with an × , and everything else sits behind one button, so

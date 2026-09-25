@@ -20,11 +20,11 @@ export async function getPreferences(): Promise<UserPreferences | null> {
 }
 
 /**
- * All lenders joined with the coverage view, statuses computed.
+ * All partners joined with the coverage view, statuses computed.
  *
- * Each lender is measured against their own tier's window (A fortnightly, B
+ * Each partner is measured against their own tier's window (A fortnightly, B
  * monthly, C quarterly), with the workspace goal from Settings standing in for
- * anyone untiered. One lender, one goal — every screen that reads this gets the
+ * anyone untiered. One partner, one goal — every screen that reads this gets the
  * same answer.
  */
 export async function getLendersWithCoverage(): Promise<LenderWithCoverage[]> {
@@ -123,7 +123,7 @@ export interface NavCounts {
   needsAttention: number;
   /** Active loans whose weekly update is due or late. */
   loansDue: number;
-  /** Open looks from lenders whose follow-up is due or late. */
+  /** Open looks from partners whose follow-up is due or late. */
   looksDue: number;
 }
 
@@ -171,7 +171,7 @@ export async function getNavCounts(): Promise<NavCounts> {
         .eq("updates_active", true)
         .lte("next_update_due_at", today)
         .is("deleted_at", null),
-      // Looks a lender raised that are owed a reply. Anything not explicitly
+      // Looks a partner raised that are owed a reply. Anything not explicitly
       // closed still counts as open — see isLookOpen in @/lib/looks.
       supabase
         .from("opportunities")
@@ -336,7 +336,7 @@ export async function ensureSampleData(): Promise<void> {
  *
  * Two queries rather than a join, then stitched in memory: the join would
  * repeat each list's name once per member, and the membership table is the
- * one that grows. At 137 lenders neither is slow, but the shape is the one
+ * one that grows. At 137 partners neither is slow, but the shape is the one
  * that stays sensible.
  */
 export async function getLenderLists(): Promise<LenderList[]> {

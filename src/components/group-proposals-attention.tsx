@@ -10,7 +10,7 @@ import type { GroupProposalRow } from "@/lib/dashboard";
 /**
  * Group asks with a yes on them, surfaced so he doesn't have to go looking.
  *
- * A single-lender proposal has one answer and lands on the dashboard the
+ * A single-partner proposal has one answer and lands on the dashboard the
  * moment it arrives. A group one accumulates, and the moment worth acting on
  * is the first yes — after that there is a date he could confirm. Counting is
  * `lib/group-proposal`; wall-clock, so it runs here rather than on the server.

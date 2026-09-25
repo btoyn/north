@@ -51,7 +51,7 @@ describe("normalizeAddress", () => {
 });
 
 describe("buildLenderIndex", () => {
-  it("skips lenders with no email", () => {
+  it("skips partners with no email", () => {
     expect(index.has("null")).toBe(false);
     expect([...index.values()]).not.toContain("nobody");
   });
@@ -82,7 +82,7 @@ describe("isAutoReply", () => {
 });
 
 describe("matchMessage", () => {
-  it("logs mail from a lender as a conversation", () => {
+  it("logs mail from a partner as a conversation", () => {
     expect(matchMessage(message(), index, ME)).toEqual([
       {
         messageId: "AAMk-1",
@@ -117,7 +117,7 @@ describe("matchMessage", () => {
     });
   });
 
-  it("counts every lender on a small outgoing thread, cc included", () => {
+  it("counts every partner on a small outgoing thread, cc included", () => {
     const matches = matchMessage(
       message({
         from: "brandon@im504.example",
@@ -150,7 +150,7 @@ describe("matchMessage", () => {
     expect(matches.every((m) => m.activityType === "campaign_email")).toBe(true);
   });
 
-  it("ignores mail that has nothing to do with a lender", () => {
+  it("ignores mail that has nothing to do with a partner", () => {
     expect(
       matchMessage(
         message({ from: "amazon@marketing.example", toRecipients: ["brandon@im504.example"] }),
@@ -194,12 +194,12 @@ describe("matchMessages", () => {
     expect(matchMessages([message()], index, ME, already)).toEqual([]);
   });
 
-  it("does not log the same message against the same lender twice in one run", () => {
+  it("does not log the same message against the same partner twice in one run", () => {
     const matches = matchMessages([message(), message()], index, ME);
     expect(matches).toHaveLength(1);
   });
 
-  it("still logs one message against two different lenders", () => {
+  it("still logs one message against two different partners", () => {
     const matches = matchMessages(
       [
         message({

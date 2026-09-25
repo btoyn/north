@@ -1,11 +1,11 @@
 /**
- * Reads a lender's reply to a meeting proposal (spec §15, steps 11–13).
+ * Reads a partner's reply to a meeting proposal (spec §15, steps 11–13).
  *
  * The brief was "auto-book when very clear, anything vague comes to me", so
  * this is built to abstain. Every rule below has to clear a specific bar, and
  * anything that doesn't lands on `unclear` and goes to Brandon. A wrong
  * "unclear" costs him ten seconds; a wrong "accepted" puts a meeting on a
- * lender's calendar that nobody agreed to.
+ * partner's calendar that nobody agreed to.
  *
  * No AI. These replies are mostly "sounds good" or "the 15th works better" —
  * ordinary code handles that, and it costs nothing and runs offline. An AI
@@ -18,7 +18,7 @@ export type ReplyIntent = "accepted" | "declined" | "countered" | "unclear";
 
 export interface ReplyReading {
   intent: ReplyIntent;
-  /** The agreed slot for `accepted`, or the lender's suggestion for `countered`. */
+  /** The agreed slot for `accepted`, or the partner's suggestion for `countered`. */
   slot: Date | null;
   /** Plain-language account of the call, shown to Brandon before he commits. */
   reason: string;
@@ -42,7 +42,7 @@ const WEEKDAYS = [
 /**
  * Drop the original email quoted underneath the reply.
  *
- * Without this the proposal's own dates get read back as if the lender wrote
+ * Without this the proposal's own dates get read back as if the partner wrote
  * them, and a "can't" in the reply collides with a "free" in the quote.
  */
 export function stripQuotedHistory(raw: string): string {

@@ -76,7 +76,7 @@ describe("saved views", () => {
       row("Left Lou", { personal: "overdue", active: false }),
     ];
     const list = lendersInSphere(rows, findSphere("needs-contact")!);
-    // An inactive lender is not a job to do.
+    // An inactive partner is not a job to do.
     expect(list.map((r) => r.fullName)).toEqual(["Gone Greg", "New Ned"]);
   });
 

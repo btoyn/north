@@ -93,7 +93,7 @@ export async function startWeeklyOutreach(): Promise<{
     );
 
   if (eligible.length === 0) {
-    return { error: "Add some lenders first — there's nobody to plan outreach for yet." };
+    return { error: "Add some partners first — there's nobody to plan outreach for yet." };
   }
 
   const { data: plan, error: planError } = await supabase
@@ -133,8 +133,8 @@ export async function startWeeklyOutreach(): Promise<{
 }
 
 /**
- * Swap a lender out of this week's list and pull up the highest-ranked
- * on-deck lender in their place (§6).
+ * Swap a partner out of this week's list and pull up the highest-ranked
+ * on-deck partner in their place (§6).
  */
 export async function replacePlanItem(itemId: string): Promise<{ error?: string }> {
   const supabase = await createClient();
@@ -152,7 +152,7 @@ export async function replacePlanItem(itemId: string): Promise<{ error?: string 
     .eq("id", itemId);
   if (error) return { error: error.message };
 
-  // Promote the next open on-deck lender into the vacated slot.
+  // Promote the next open on-deck partner into the vacated slot.
   const { data: nextUp } = await supabase
     .from("weekly_relationship_plan_items")
     .select("id")
@@ -175,7 +175,7 @@ export async function replacePlanItem(itemId: string): Promise<{ error?: string 
 }
 
 /**
- * Put a tentative hold on the calendar for a lender. Tentative rather than
+ * Put a tentative hold on the calendar for a partner. Tentative rather than
  * confirmed, because nothing is agreed until they reply — and tentative items
  * surface in the Upcoming panel so they don't get forgotten (§7).
  */
@@ -197,7 +197,7 @@ export async function scheduleTentativeMeeting(input: {
     .select("full_name, institution_id, territory")
     .eq("id", input.lenderId)
     .maybeSingle();
-  if (!lender) return { error: "Lender not found." };
+  if (!lender) return { error: "Partner not found." };
 
   const start = new Date(input.startAt);
   if (Number.isNaN(start.getTime())) return { error: "That date didn't look valid." };
@@ -232,7 +232,7 @@ export async function scheduleTentativeMeeting(input: {
   if (attendeeError) return { error: attendeeError.message };
 
   revalidatePath("/dashboard");
-  revalidatePath(`/lenders/${input.lenderId}`);
+  revalidatePath(`/partners/${input.lenderId}`);
   return {};
 }
 

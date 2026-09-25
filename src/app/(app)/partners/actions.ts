@@ -68,16 +68,16 @@ export interface CreateLenderInput {
 
 export type CreateLenderResult =
   | { status: "duplicates"; candidates: DuplicateCandidate[] }
-  /** The lender is saved; only the group membership failed. */
+  /** The partner is saved; only the group membership failed. */
   | { status: "saved_without_lists"; lenderId: string; message: string }
   | { status: "error"; message: string };
 
 /**
- * Puts a brand-new lender on the groups that were ticked on the way in.
+ * Puts a brand-new partner on the groups that were ticked on the way in.
  *
  * Returns a sentence when something went wrong and null when all is well. The
- * lender row already exists by this point, so nothing in here is allowed to
- * throw the creation away — the worst case is a saved lender and a message
+ * partner row already exists by this point, so nothing in here is allowed to
+ * throw the creation away — the worst case is a saved partner and a message
  * saying the groups didn't take.
  */
 async function addToLists(
@@ -231,7 +231,7 @@ export async function createLender(input: CreateLenderInput): Promise<CreateLend
     });
   }
 
-  // Follow-up task so the new lender doesn't disappear (§13)
+  // Follow-up task so the new partner doesn't disappear (§13)
   if (followUpDate) {
     await supabase.from("tasks").insert({
       user_id: user.id,
@@ -244,7 +244,7 @@ export async function createLender(input: CreateLenderInput): Promise<CreateLend
   }
 
   // Groups, while you still remember why you met them. A failure here is not
-  // worth losing the lender over, so it is reported and the record stands.
+  // worth losing the partner over, so it is reported and the record stands.
   const listProblem = await addToLists(supabase, user.id, lender.id, {
     listIds: input.listIds,
     newListName: input.newListName,
@@ -258,15 +258,15 @@ export async function createLender(input: CreateLenderInput): Promise<CreateLend
   });
 
   revalidatePath("/tiers", "layout");
-  revalidatePath("/lenders", "layout");
+  revalidatePath("/partners", "layout");
   if (listProblem) {
     return { status: "saved_without_lists", lenderId: lender.id, message: listProblem };
   }
-  redirect(`/lenders/${lender.id}`);
+  redirect(`/partners/${lender.id}`);
 }
 
 /**
- * Sets a lender's tier.
+ * Sets a partner's tier.
  *
  * Its own action rather than a call to `updateLender` because the tier decides
  * how often this person is chased — it is worth checking the value is one of
@@ -290,7 +290,7 @@ export async function setLenderTier(
     .eq("id", lenderId)
     .is("deleted_at", null)
     .maybeSingle();
-  if (!before) return { error: "Lender not found." };
+  if (!before) return { error: "Partner not found." };
 
   const { error } = await supabase
     .from("lenders")
@@ -309,7 +309,7 @@ export async function setLenderTier(
 
   // The tier changes how often they're due, so every count that reads coverage
   // moves with it.
-  revalidatePath(`/lenders/${lenderId}`);
+  revalidatePath(`/partners/${lenderId}`);
   revalidatePath("/tiers", "layout");
   revalidatePath("/dashboard");
   return {};
@@ -343,7 +343,7 @@ export async function updateLender(
     undoAvailable: true,
   });
 
-  revalidatePath(`/lenders/${lenderId}`);
+  revalidatePath(`/partners/${lenderId}`);
   revalidatePath("/tiers", "layout");
   return {};
 }
@@ -404,7 +404,7 @@ export async function changeLenderInstitution(
     newValue: { institution: newInstitutionName },
   });
 
-  revalidatePath(`/lenders/${lenderId}`);
+  revalidatePath(`/partners/${lenderId}`);
   const former = (lender?.institution as unknown as { name: string } | null)?.name;
   // §12: the former institution may need a replacement contact — surfaced by the UI.
   return { formerInstitution: former };
@@ -429,7 +429,7 @@ export async function addPersonalDetail(
     detail: detail.trim(),
   });
   if (error) return { error: error.message };
-  revalidatePath(`/lenders/${lenderId}`);
+  revalidatePath(`/partners/${lenderId}`);
   return {};
 }
 
@@ -439,5 +439,5 @@ export async function removePersonalDetail(detailId: string, lenderId: string): 
     .from("lender_personal_details")
     .update({ deleted_at: new Date().toISOString() })
     .eq("id", detailId);
-  revalidatePath(`/lenders/${lenderId}`);
+  revalidatePath(`/partners/${lenderId}`);
 }

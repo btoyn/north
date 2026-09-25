@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
  * Needs Attention folded into Spheres.
  *
  * It was one saved view wearing a nav item, and its filters were the same
- * filters the lender list had. Each one lands on the sphere that means it.
+ * filters the partner list had. Each one lands on the sphere that means it.
  */
 const FILTER_TO_SPHERE: Record<string, string> = {
   all: "needs-contact",

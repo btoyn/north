@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getLenderLists } from "@/lib/data";
 import { AddLenderForm } from "./add-lender-form";
 
-export const metadata = { title: "Add lender" };
+export const metadata = { title: "Add partner" };
 
 export default async function NewLenderPage() {
   const supabase = await createClient();
@@ -19,7 +19,7 @@ export default async function NewLenderPage() {
   return (
     <div className="mx-auto max-w-xl">
       <PageHeader
-        title="Add lender"
+        title="Add partner"
         description="Only name and institution are required — fill in the rest when you have it."
       />
       <AddLenderForm

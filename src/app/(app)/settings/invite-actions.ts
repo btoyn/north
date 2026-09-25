@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/server";
  * Invite codes for bringing the other loan officers on (spec §1.5).
  *
  * Each officer gets their own walled-off workspace — these codes only let
- * someone create an account, never see anyone else's lenders.
+ * someone create an account, never see anyone else's partners.
  */
 
 export interface InviteRow {

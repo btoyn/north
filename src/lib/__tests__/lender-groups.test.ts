@@ -89,7 +89,7 @@ describe("groupLenders", () => {
     ]);
   });
 
-  it("orders territories by how many lenders they hold", () => {
+  it("orders territories by how many partners they hold", () => {
     const sections = groupLenders(
       [
         row("A", "Southern Utah", "X"),
@@ -129,7 +129,7 @@ describe("groupLenders", () => {
     expect(sections[0].groups[0].lastTouchDays).toBeNull();
   });
 
-  it("labels missing institution and territory rather than dropping the lender", () => {
+  it("labels missing institution and territory rather than dropping the partner", () => {
     const sections = groupLenders([row("A", null, null)], read);
     expect(sections[0].territory).toBe(NO_TERRITORY);
     expect(sections[0].groups[0].institution).toBe(NO_INSTITUTION);
@@ -141,7 +141,7 @@ describe("groupLenders", () => {
     expect(sections[0].groups[0].institution).toBe(NO_INSTITUTION);
   });
 
-  it("sorts unplaced lenders last even when there are many of them", () => {
+  it("sorts unplaced partners last even when there are many of them", () => {
     const sections = groupLenders(
       [
         row("A", null, "X"),

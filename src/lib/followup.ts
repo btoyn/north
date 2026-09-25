@@ -3,7 +3,7 @@
  *
  * After Sources & Uses is sent: follow up at day 7, 14, and 21 with escalating
  * intent; after 3 unanswered follow-ups the opportunity moves to Dormant.
- * A lender response reopens it automatically; custom future dates allowed.
+ * A partner response reopens it automatically; custom future dates allowed.
  */
 
 export const MAX_FOLLOW_UP_ATTEMPTS = 3;

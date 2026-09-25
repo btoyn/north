@@ -26,8 +26,8 @@ export default async function ProposalPage({ params }: { params: Promise<{ id: s
     .maybeSingle();
 
   if (!proposal) notFound();
-  // A single-lender proposal lives on that lender's page, not here.
-  if (proposal.lender_id) redirect(`/lenders/${proposal.lender_id}`);
+  // A single-partner proposal lives on that partner's page, not here.
+  if (proposal.lender_id) redirect(`/partners/${proposal.lender_id}`);
 
   const { data: attendees } = await supabase
     .from("meeting_proposal_attendees")

@@ -23,7 +23,7 @@ describe("tierGoalDays", () => {
     expect(tierGoalDays("D", 30)).toBe(180);
   });
 
-  it("falls back to the workspace goal for an untiered lender", () => {
+  it("falls back to the workspace goal for an untiered partner", () => {
     // Not quarterly: nobody decided they were a C, and filing them there
     // would hide the decision for three months.
     expect(tierGoalDays("unassigned", 30)).toBe(30);
@@ -70,7 +70,7 @@ describe("countsAsTouch", () => {
     }
   });
 
-  it("treats an untiered lender like C rather than like A", () => {
+  it("treats an untiered partner like C rather than like A", () => {
     // Untiered means undecided. Holding them to the strictest bar would
     // invent a decision nobody made.
     expect(countsAsTouch("personal_email", "unassigned")).toBe(true);
@@ -79,7 +79,7 @@ describe("countsAsTouch", () => {
 });
 
 describe("tier cadence through the coverage window", () => {
-  it("holds an A lender to a month", () => {
+  it("holds an A partner to a month", () => {
     const opts = { goalDays: TIER_GOAL_DAYS.A!, graceDays: 10 };
     expect(coverageStatus(daysAgo(30), false, opts, NOW)).toBe("on_track");
     expect(coverageStatus(daysAgo(35), false, opts, NOW)).toBe("grace");
@@ -87,17 +87,17 @@ describe("tier cadence through the coverage window", () => {
     expect(coverageStatus(daysAgo(61), false, opts, NOW)).toBe("seriously_overdue");
   });
 
-  it("lets a C lender go a quarter", () => {
+  it("lets a C partner go a quarter", () => {
     const opts = { goalDays: TIER_GOAL_DAYS.C!, graceDays: 10 };
     expect(coverageStatus(daysAgo(89), false, opts, NOW)).toBe("on_track");
     expect(coverageStatus(daysAgo(95), false, opts, NOW)).toBe("grace");
-    // Every boundary scales with the goal — a C lender is not "seriously
+    // Every boundary scales with the goal — a C partner is not "seriously
     // overdue" at 61 days the way the old fixed cut-off would have said.
     expect(coverageStatus(daysAgo(120), false, opts, NOW)).toBe("overdue");
     expect(coverageStatus(daysAgo(200), false, opts, NOW)).toBe("seriously_overdue");
   });
 
-  it("lets a D lender go half a year", () => {
+  it("lets a D partner go half a year", () => {
     const opts = { goalDays: TIER_GOAL_DAYS.D!, graceDays: 10 };
     expect(coverageStatus(daysAgo(179), false, opts, NOW)).toBe("on_track");
     expect(coverageStatus(daysAgo(185), false, opts, NOW)).toBe("grace");
@@ -189,7 +189,7 @@ describe("the weekly loan update", () => {
 describe("isDealOnly", () => {
   const iso = (n: number) => daysAgo(n).toISOString();
 
-  it("flags an A lender carried entirely by the Friday email", () => {
+  it("flags an A partner carried entirely by the Friday email", () => {
     expect(
       isDealOnly("A", { personal: iso(3), conversation: iso(200), dealUpdate: iso(3) }, 30, NOW),
     ).toBe(true);
@@ -201,7 +201,7 @@ describe("isDealOnly", () => {
     ).toBe(false);
   });
 
-  it("says nothing about a lender with no loan running", () => {
+  it("says nothing about a partner with no loan running", () => {
     expect(
       isDealOnly("A", { personal: iso(3), conversation: iso(3), dealUpdate: null }, 30, NOW),
     ).toBe(false);
@@ -219,7 +219,7 @@ describe("isDealOnly", () => {
     ).toBe(false);
   });
 
-  it("flags a C lender whose only contact all quarter was the loan email", () => {
+  it("flags a C partner whose only contact all quarter was the loan email", () => {
     expect(
       isDealOnly("C", { personal: iso(10), conversation: null, dealUpdate: iso(10) }, 90, NOW),
     ).toBe(true);

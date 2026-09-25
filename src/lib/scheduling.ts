@@ -104,7 +104,7 @@ function overlaps(start: Date, end: Date, busy: BusyBlock[]): boolean {
 }
 
 /**
- * Two dates a lender can choose between, one per day.
+ * Two dates a partner can choose between, one per day.
  *
  * Offering two times on the same afternoon reads as a single option with extra
  * steps, so each candidate day contributes at most one slot.

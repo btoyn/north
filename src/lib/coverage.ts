@@ -1,7 +1,7 @@
 /**
  * Relationship coverage engine (spec §9).
  *
- * Rolling window, never a calendar-month reset. All lenders share the same
+ * Rolling window, never a calendar-month reset. All partners share the same
  * 30-day goal; tier influences prioritization elsewhere, not the window.
  */
 
@@ -33,7 +33,7 @@ export function daysSince(date: Date, now: Date = new Date()): number {
  * function does naturally.
  *
  * Every boundary is relative to the goal, because the goal is no longer one
- * number: tiers give an A lender a fortnight and a C lender a quarter (see
+ * number: tiers give an A partner a fortnight and a C partner a quarter (see
  * `lib/tiers`). "Seriously overdue" is twice the goal, which at the default
  * 30-day window is the same 60 days it always was.
  */
@@ -94,7 +94,7 @@ export const NON_COVERAGE_ACTIVITY_TYPES = new Set([
 
 /**
  * "Personally engaged" excludes campaign email (§9 coverage categories).
- * A lender may be campaign-covered (visible) but personally overdue.
+ * A partner may be campaign-covered (visible) but personally overdue.
  */
 export function isPersonalTouch(activityType: string): boolean {
   return (

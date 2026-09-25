@@ -23,7 +23,7 @@ export default async function ImportPage() {
   return (
     <div className="mx-auto max-w-3xl">
       <PageHeader
-        title="Import your lender list"
+        title="Import your partner list"
         description="Upload the Excel or CSV file you use today. Nothing is saved until you review and confirm."
       />
       <ImportWizard

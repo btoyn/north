@@ -12,12 +12,12 @@ import type { AvailabilityRule } from "@/lib/scheduling";
 /**
  * Server side of the group meeting flow.
  *
- * Same division of labour as the single-lender actions: dates and replies are
+ * Same division of labour as the single-partner actions: dates and replies are
  * worked out in the browser, where the wall clock is his, and these functions
  * persist what he decided. Nothing here sends an email or books anything on
  * its own.
  *
- * Every one of these re-reads the lenders it was handed. The picker only ever
+ * Every one of these re-reads the partners it was handed. The picker only ever
  * offers people at the right bank with an address to write to, but the picker
  * is a screen, not a boundary.
  */
@@ -403,6 +403,6 @@ export async function confirmGroupMeeting(
   revalidatePath("/dashboard");
   revalidatePath("/tiers");
   revalidatePath(`/proposals/${input.proposalId}`);
-  for (const lenderId of input.lenderIds) revalidatePath(`/lenders/${lenderId}`);
+  for (const lenderId of input.lenderIds) revalidatePath(`/partners/${lenderId}`);
   return { meetingId: meeting.id };
 }

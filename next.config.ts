@@ -7,12 +7,15 @@ const nextConfig: NextConfig = {
     "/guide": ["./docs/USER_GUIDE.md"],
   },
 
-  // Spheres became Tiers. Anyone with the old address bookmarked, or a link to
-  // one saved view sitting in a text message, still lands in the right place.
+  // Spheres became Tiers and lenders became partners. Anyone with an old
+  // address bookmarked, or a link sitting in a text message, still lands in the
+  // right place.
   async redirects() {
     return [
       { source: "/spheres", destination: "/tiers", permanent: true },
       { source: "/spheres/:key", destination: "/tiers/:key", permanent: true },
+      { source: "/lenders", destination: "/partners", permanent: true },
+      { source: "/lenders/:path*", destination: "/partners/:path*", permanent: true },
     ];
   },
 };

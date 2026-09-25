@@ -10,7 +10,7 @@ export interface CoveragePoint {
   date: string;
   /** Short axis label, e.g. "Jun 8". */
   label: string;
-  /** Percent of the lenders that existed then who were personally covered. */
+  /** Percent of the partners that existed then who were personally covered. */
   pct: number;
   covered: number;
   total: number;
@@ -53,9 +53,9 @@ function startOfDay(d: Date): Date {
  * Reconstruct personal coverage for each of the last 8 weeks from the activity
  * timeline (§9 rules, applied historically).
  *
- * A lender counts as covered on a given date when they had a personal touch
+ * A partner counts as covered on a given date when they had a personal touch
  * within the goal window ending that date, or a confirmed meeting still in the
- * future as of that date. Lenders created after the snapshot date are excluded
+ * future as of that date. Partners created after the snapshot date are excluded
  * from that week entirely, so onboarding a big list never shows as a crash.
  */
 export async function getCoverageHistory(): Promise<CoverageHistory> {
@@ -162,7 +162,7 @@ export interface CoverageSplitSegment {
   hint: string;
 }
 
-/** Which of the three coverage states a lender is in right now. */
+/** Which of the three coverage states a partner is in right now. */
 export function coverageStateOf(lender: LenderWithCoverage): CoverageSplitKey {
   const { personal, visible, hasConfirmedFutureMeeting } = lender.coverage;
   if (hasConfirmedFutureMeeting || personal === "on_track" || personal === "grace") {
@@ -173,7 +173,7 @@ export function coverageStateOf(lender: LenderWithCoverage): CoverageSplitKey {
 
 /**
  * Personal / campaign-only / uncovered, mutually exclusive so the bar always
- * sums to the active lender count.
+ * sums to the active partner count.
  */
 export function buildCoverageSplit(lenders: LenderWithCoverage[]): CoverageSplitSegment[] {
   const active = lenders.filter((l) => l.active);
@@ -208,7 +208,7 @@ export function buildCoverageSplit(lenders: LenderWithCoverage[]): CoverageSplit
   ];
 }
 
-/** One dot per lender for the no-history fallback in the coverage zone. */
+/** One dot per partner for the no-history fallback in the coverage zone. */
 export function buildLenderDots(
   lenders: LenderWithCoverage[],
   limit = 24,
@@ -397,19 +397,19 @@ export async function getLoanStatuses(): Promise<LoanStatus[]> {
 }
 
 export interface RelationshipContext {
-  /** Lenders who referred a loan currently in process. */
+  /** Partners who referred a loan currently in process. */
   activeLoanLenders: Set<string>;
-  /** Lenders with an open promise or task. */
+  /** Partners with an open promise or task. */
   openFollowUpLenders: Set<string>;
-  /** Lenders with a saved personal note to open a conversation with. */
+  /** Partners with a saved personal note to open a conversation with. */
   personalTopicLenders: Set<string>;
-  /** Lenders who reached out to you in the last 30 days. */
+  /** Partners who reached out to you in the last 30 days. */
   recentInboundLenders: Set<string>;
   /** Territory of the next trip, for the "near upcoming trip" chip. */
   tripTerritory: string | null;
 }
 
-/** Signals behind the reason chips on each lender row. */
+/** Signals behind the reason chips on each partner row. */
 export async function getRelationshipContext(): Promise<RelationshipContext> {
   const supabase = await createClient();
   const today = new Date().toISOString().slice(0, 10);

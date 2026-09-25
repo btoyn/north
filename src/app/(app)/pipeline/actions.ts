@@ -6,7 +6,7 @@ import { logAudit } from "@/lib/audit";
 import { LOOK_STAGE, followUpDate, isLookStatus, stageForStatus, type LookStatus } from "@/lib/looks";
 
 /**
- * Looks from lenders.
+ * Looks from partners.
  *
  * The point of a look is the follow-up, not the record. So logging one asks for
  * as little as possible — who mentioned it and what they said — and everything
@@ -49,7 +49,7 @@ export async function logLook(input: {
     .eq("id", input.lenderId)
     .is("deleted_at", null)
     .maybeSingle();
-  if (!lender) return { error: "Lender not found." };
+  if (!lender) return { error: "Partner not found." };
 
   const now = new Date();
   const days = await followUpInterval(supabase, user.id);
@@ -74,7 +74,7 @@ export async function logLook(input: {
 
   if (error || !data) return { error: error?.message ?? "Could not save the look." };
 
-  // A lender raising a deal is contact, and inbound contact at that — so it
+  // A partner raising a deal is contact, and inbound contact at that — so it
   // lands on their timeline and resets their coverage clock (§9). Otherwise
   // someone who just handed you business shows as needing attention tomorrow.
   await supabase.from("activities").insert({
@@ -102,7 +102,7 @@ export async function logLook(input: {
 
   revalidatePath("/pipeline");
   revalidatePath("/dashboard");
-  revalidatePath(`/lenders/${lender.id}`);
+  revalidatePath(`/partners/${lender.id}`);
   return {};
 }
 
@@ -112,7 +112,7 @@ export async function logLook(input: {
  * One verb for the whole board, because the board offers one gesture. It also
  * carries the things a column change implies: the follow-up clock stops when a
  * look closes and restarts when it reopens, and arriving in "Followed up" logs
- * the touch on the lender's timeline — circling back on a deal is contact, and
+ * the touch on the partner's timeline — circling back on a deal is contact, and
  * not counting it would show someone as neglected the week you spoke to them.
  */
 export async function moveLook(
@@ -187,7 +187,7 @@ export async function moveLook(
   revalidatePath("/pipeline");
   revalidatePath("/dashboard");
   revalidatePath("/tiers", "layout");
-  if (look.lender_id) revalidatePath(`/lenders/${look.lender_id}`);
+  if (look.lender_id) revalidatePath(`/partners/${look.lender_id}`);
   return {};
 }
 

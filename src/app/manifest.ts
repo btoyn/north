@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "North",
     short_name: "North",
-    description: "Personal lender relationship and communication command center",
+    description: "Personal partner relationship and communication command center",
     start_url: "/dashboard",
     display: "standalone",
     background_color: "#ffffff",

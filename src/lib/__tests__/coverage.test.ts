@@ -43,7 +43,7 @@ describe("coverageStatus (spec §9 rolling window)", () => {
   });
 
   it("canceling the meeting restores status from last completed touch", () => {
-    // Same lender, meeting canceled -> flag false -> falls back to 45 days ago
+    // Same partner, meeting canceled -> flag false -> falls back to 45 days ago
     expect(coverageStatus(daysAgo(45), false, {}, NOW)).toBe("overdue");
   });
 
@@ -83,7 +83,7 @@ describe("valid coverage classification (spec §9)", () => {
 });
 
 describe("lenderCoverage (visible vs personally engaged)", () => {
-  it("a lender can be campaign-covered but personally overdue", () => {
+  it("a partner can be campaign-covered but personally overdue", () => {
     const result = lenderCoverage(
       {
         lastVisibleTouchAt: daysAgo(12), // recent campaign
@@ -99,7 +99,7 @@ describe("lenderCoverage (visible vs personally engaged)", () => {
     expect(result.daysSincePersonal).toBe(55);
   });
 
-  it("handles never-contacted lenders", () => {
+  it("handles never-contacted partners", () => {
     const result = lenderCoverage(
       { lastVisibleTouchAt: null, lastPersonalTouchAt: null, hasConfirmedFutureMeeting: false },
       {},

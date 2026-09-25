@@ -32,7 +32,7 @@ export interface LoanBook<T> {
   active: T[];
   /** Approved and handed off. The win column. */
   approved: T[];
-  /** Stopped for any other reason. Still credits the lender who sent it. */
+  /** Stopped for any other reason. Still credits the partner who sent it. */
   dead: T[];
 }
 

@@ -2,7 +2,7 @@
  * Turning a mailbox into touches.
  *
  * The scan reads the mailbox but keeps almost none of it. A message earns a
- * row only when the other party is already a lender in the list, which is the
+ * row only when the other party is already a partner in the list, which is the
  * whole privacy boundary: mail with a spouse, a boss, a borrower's attorney
  * matches nothing and is dropped on the floor unread beyond its address line.
  *
@@ -35,10 +35,10 @@ export interface MatchedMail {
 }
 
 /**
- * Lender recipients above which an outgoing email stops being personal.
+ * Partner recipients above which an outgoing email stops being personal.
  *
  * A note to two or three people is still written to them. A note to a dozen is
- * a blast wearing a personal address, and letting it mark that many lenders as
+ * a blast wearing a personal address, and letting it mark that many partners as
  * touched would turn the compose window into a way of clearing the list — the
  * same reason campaign email has never counted.
  */
@@ -58,14 +58,14 @@ export function normalizeAddress(raw: string | null | undefined): string | null 
   return address.includes("@") ? address : null;
 }
 
-/** Address to lender id, for the addresses worth recognising. */
+/** Address to partner id, for the addresses worth recognising. */
 export function buildLenderIndex(
   lenders: readonly { id: string; email: string | null }[],
 ): Map<string, string> {
   const index = new Map<string, string>();
   for (const lender of lenders) {
     const address = normalizeAddress(lender.email);
-    // First one wins. Two lenders sharing an address is a data problem to fix
+    // First one wins. Two partners sharing an address is a data problem to fix
     // in the list, not something to guess at here.
     if (address && !index.has(address)) index.set(address, lender.id);
   }
@@ -88,7 +88,7 @@ const AUTO_REPLY_PREFIXES = [
 /**
  * Whether this is the mailbox talking rather than the person.
  *
- * An out-of-office comes from the lender's own address, so without this it
+ * An out-of-office comes from the partner's own address, so without this it
  * reads as a reply and restarts the clock for a tier that specifically
  * requires a human on the other end. That would be the single most misleading
  * thing this feature could do, so it is checked first and checked loosely.
@@ -103,7 +103,7 @@ export function isAutoReply(subject: string | null | undefined): boolean {
 /**
  * The touches a single message is worth, which is usually none.
  *
- * Returns one row per lender involved, because a reply to three of them is
+ * Returns one row per partner involved, because a reply to three of them is
  * three relationships heard from, not one. Incoming mail is a conversation and
  * restarts every tier's clock; outgoing mail is not, and for A and B it will
  * sit on the timeline without making them look covered. That asymmetry is the
@@ -121,7 +121,7 @@ export function matchMessage(
 
   const fromLender = lenderIndex.get(from);
   if (fromLender) {
-    // An automatic reply is the server being polite, not the lender writing.
+    // An automatic reply is the server being polite, not the partner writing.
     if (isAutoReply(message.subject)) return [];
     return [
       {
@@ -168,8 +168,8 @@ export function matchMessage(
  * Every touch a batch of messages is worth, with what is already logged left
  * out.
  *
- * Dedupe is on Graph's message id paired with the lender, so re-running a scan
- * over the same window is free and a message to two lenders still lands twice.
+ * Dedupe is on Graph's message id paired with the partner, so re-running a scan
+ * over the same window is free and a message to two partners still lands twice.
  */
 export function matchMessages(
   messages: readonly MailMessage[],

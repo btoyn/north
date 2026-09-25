@@ -21,7 +21,7 @@ import type { NavCounts, QuickLogData } from "@/lib/data";
 /**
  * Five destinations, not seven.
  *
- * Lenders, Institutions and Needs Attention were three doors into the same
+ * Partners, Institutions and Needs Attention were three doors into the same
  * table — Spheres is that table with its useful slices named. Looks became
  * Pipeline. Import still lives in Settings.
  */

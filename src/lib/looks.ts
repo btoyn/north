@@ -1,13 +1,13 @@
 /**
- * Looks from lenders — the follow-up clock and how a look reads on screen.
+ * Looks from partners — the follow-up clock and how a look reads on screen.
  *
- * A "look" is any time a lender brings up a possible deal: a real referral, a
+ * A "look" is any time a partner brings up a possible deal: a real referral, a
  * question about whether something would qualify, a vague "I might have one for
  * you." The record exists so the conversation gets followed up on, and so the
- * count per lender answers who is actually reaching out.
+ * count per partner answers who is actually reaching out.
  *
  * Kept pure and separate from the database for the same reason the loan cadence
- * is: an off-by-one here means a lender who asked you a question never hears
+ * is: an off-by-one here means a partner who asked you a question never hears
  * back, which is worse than most bugs this app could have.
  */
 

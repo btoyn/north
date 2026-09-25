@@ -4,13 +4,13 @@ import { useOptimistic, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { TIERS, TIER_CADENCE, TIER_LABEL, readTier, type Tier } from "@/lib/tiers";
 import { cn } from "@/lib/utils";
-import { setLenderTier } from "@/app/(app)/lenders/actions";
+import { setLenderTier } from "@/app/(app)/partners/actions";
 
 /**
  * The tier, changed in place.
  *
  * Tier is the one field worth editing without opening a form: it sets how often
- * this lender is due, so deciding it is the whole job of working through an
+ * this partner is due, so deciding it is the whole job of working through an
  * untiered list. Optimistic, because the answer is already on screen and
  * waiting for a round trip to see it move would make sorting a hundred people
  * feel like work.

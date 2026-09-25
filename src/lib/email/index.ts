@@ -1,6 +1,6 @@
 /**
  * Outbound email abstraction for the daily digest and reminder emails
- * (spec §19, §31). This is NOT lender-facing email — lender email always goes
+ * (spec §19, §31). This is NOT partner-facing email — partner email always goes
  * through Outlook drafts the user sends personally.
  */
 

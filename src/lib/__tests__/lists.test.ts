@@ -63,7 +63,7 @@ describe("normalizeListName", () => {
     // "Golf  crew" and "Golf crew" are one group to a person and two rows to a
     // database, and the duplicate only shows up once both have members.
     expect(normalizeListName("  Golf   crew  ")).toBe("Golf crew");
-    expect(normalizeListName("Construction\tlenders")).toBe("Construction lenders");
+    expect(normalizeListName("Construction\tpartners")).toBe("Construction partners");
   });
 });
 
@@ -111,8 +111,8 @@ describe("sortLists", () => {
 
 describe("describeList", () => {
   it("counts, and singularises", () => {
-    expect(describeList(list("1", "x", ["a"]))).toBe("1 lender");
-    expect(describeList(list("1", "x", ["a", "b"]))).toBe("2 lenders");
+    expect(describeList(list("1", "x", ["a"]))).toBe("1 partner");
+    expect(describeList(list("1", "x", ["a", "b"]))).toBe("2 partners");
   });
 
   it("says something useful about an empty one", () => {
@@ -149,7 +149,7 @@ describe("listSpheres", () => {
 });
 
 describe("listsContaining", () => {
-  it("finds the lists a lender is on, sorted", () => {
+  it("finds the lists a partner is on, sorted", () => {
     const lists = [
       list("1", "Zebra", ["x"]),
       list("2", "Alpha", ["x", "y"]),

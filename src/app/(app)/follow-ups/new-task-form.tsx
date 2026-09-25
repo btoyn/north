@@ -40,7 +40,7 @@ export function NewTaskForm({ lenders }: { lenders: { id: string; name: string }
         <Input name="title" placeholder="Add a task…" required />
       </div>
       <Select name="lenderId" className="w-44" defaultValue="">
-        <option value="">No lender</option>
+        <option value="">No partner</option>
         {lenders.map((l) => (
           <option key={l.id} value={l.id}>
             {l.name}

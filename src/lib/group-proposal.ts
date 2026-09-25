@@ -1,7 +1,7 @@
 /**
  * Group meeting proposals: the rules, none of the screen.
  *
- * A group ask is one email to several lenders at the same bank, all of them on
+ * A group ask is one email to several partners at the same bank, all of them on
  * the To line, and it comes back as several separate replies. So the two
  * questions this file answers are: what did *this* person say about *each*
  * date, and which single date has the most yeses.

@@ -18,7 +18,7 @@ import type { CoverageSplitKey, CoverageSplitSegment, LoanStatus } from "@/lib/d
  * coverage bar. Colour carries meaning: blue for relationship activity, gold for
  * pending work, teal for confirmed and healthy.
  *
- * Approval volume and dollars are deliberately absent: this app tracks lenders,
+ * Approval volume and dollars are deliberately absent: this app tracks partners,
  * not loans, and production numbers live in the separate system Brandon uses.
  */
 
@@ -29,7 +29,7 @@ export interface MomentumProps {
     active: number;
     change30: number | null;
     trend: number[];
-    /** One entry per active lender, for the no-history fallback. */
+    /** One entry per active partner, for the no-history fallback. */
     dots: CoverageSplitKey[];
   };
   loans: { statuses: LoanStatus[]; dueNow: number };

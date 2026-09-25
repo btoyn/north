@@ -19,7 +19,7 @@ import {
 /**
  * Taking a bank's team to lunch.
  *
- * The same shape as the single-lender sheet — dates worked out here in his own
+ * The same shape as the single-partner sheet — dates worked out here in his own
  * wall clock, one draft he proofs, nothing sent by the app — with a picker on
  * the front. Nobody is ticked to begin with: some of these banks have a dozen
  * people and inviting all of them is not the idea.
@@ -44,7 +44,7 @@ export function GroupProposalSheet({
   onClose,
 }: {
   institutionId: string;
-  /** Already chosen elsewhere — the lender he opened the single sheet on. */
+  /** Already chosen elsewhere — the partner he opened the single sheet on. */
   preselectLenderIds?: string[];
   onClose: () => void;
 }) {
