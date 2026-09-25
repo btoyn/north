@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { syncMailbox } from "@/lib/microsoft/mail-sync";
+import { syncMeetingResponses } from "@/lib/microsoft/calendar-sync";
 
 /**
- * Runs the mailbox sweep for whoever is signed in.
+ * Runs the mailbox sweep, and reads back who accepted the invitations, for
+ * whoever is signed in.
  *
  * Driven from the browser rather than a cron, which is what lets it run as the
  * user: every read and write goes through their own session, so row-level
@@ -50,5 +52,11 @@ export async function POST(request: Request) {
   }
 
   const result = await syncMailbox();
-  return NextResponse.json(result);
+
+  // The other direction: who accepted the invitations North sent. Same run and
+  // same session, because it answers the same question he presses this for --
+  // has anything happened since I last looked.
+  const responses = await syncMeetingResponses();
+
+  return NextResponse.json({ ...result, responses });
 }

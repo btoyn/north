@@ -52,6 +52,7 @@ export function MailScanCard({ state }: { state: MailScanState }) {
         failure?: string;
         detail?: string;
         error?: string;
+        responses?: { checked?: number; updated?: number };
       };
       if (result.error) setNote(result.error);
       else if (result.failure) {
@@ -62,8 +63,16 @@ export function MailScanCard({ state }: { state: MailScanState }) {
         // Both numbers, always. "Nothing new" on its own hides the difference
         // between a quiet mailbox and a sweep that is matching nobody.
         const scanned = result.scanned ?? 0;
+        // Invitation answers only get a mention when there were some. The two
+        // mail numbers are always shown because a zero there is diagnostic;
+        // nobody having touched an invite since the last run is just quiet.
+        const accepted = result.responses?.updated ?? 0;
+        const answers =
+          accepted > 0
+            ? ` ${accepted} invitation ${accepted === 1 ? "answer" : "answers"} came back.`
+            : "";
         setNote(
-          `Read ${scanned} message${scanned === 1 ? "" : "s"}, logged ${result.logged ?? 0}.`,
+          `Read ${scanned} message${scanned === 1 ? "" : "s"}, logged ${result.logged ?? 0}.${answers}`,
         );
       }
       router.refresh();

@@ -3,6 +3,7 @@ import { MEETING_TIME_ZONE_WINDOWS, toZonedDateTime } from "@/lib/calendar-event
 import { GRAPH_BASE, SCOPE_FOR, scopeSatisfied } from "./config";
 import { getAccessToken } from "./tokens";
 import type { MailMessage } from "@/lib/mail-match";
+import type { GraphAttendeeResponse } from "@/lib/meeting-responses";
 import {
   busyBlocksFromSchedule,
   mergeBusyBlocks,
@@ -25,6 +26,9 @@ export type GraphFailure =
   | "not_connected"
   | "reconnect_needed"
   | "missing_scope"
+  // The thing we asked about is no longer there -- an event deleted out of
+  // Outlook, most often. Ordinary, and not a reason to report a fault.
+  | "gone"
   | "unavailable";
 
 async function graphFetch(
@@ -55,6 +59,7 @@ async function graphFetch(
 
     if (res.status === 401) return { ok: false, failure: "reconnect_needed" };
     if (res.status === 403) return { ok: false, failure: "missing_scope", detail: init.scope };
+    if (res.status === 404) return { ok: false, failure: "gone" };
     if (!res.ok) {
       return { ok: false, failure: "unavailable", detail: `HTTP ${res.status}` };
     }
@@ -156,6 +161,37 @@ export async function createCalendarEvent(
   if (!result.ok) return { failure: result.failure, detail: result.detail };
   const id = (result.data as { id?: string })?.id;
   return id ? { eventId: id } : { failure: "unavailable", detail: "No event id returned" };
+}
+
+/**
+ * Who has accepted, declined or half-accepted a meeting we created.
+ *
+ * One request per event, and only for events North booked, so this never walks
+ * his calendar. `$select=attendees` keeps subjects, bodies and everyone else's
+ * meetings out of the response.
+ */
+export async function getEventResponses(
+  eventId: string,
+): Promise<{ attendees?: GraphAttendeeResponse[]; failure?: GraphFailure; detail?: string }> {
+  const result = await graphFetch(
+    `/me/events/${encodeURIComponent(eventId)}?$select=attendees`,
+    { scope: SCOPE_FOR.freeBusy },
+  );
+  if (!result.ok) return { failure: result.failure, detail: result.detail };
+
+  const data = result.data as {
+    attendees?: {
+      emailAddress?: { address?: string };
+      status?: { response?: string };
+    }[];
+  };
+
+  return {
+    attendees: (data.attendees ?? []).map((a) => ({
+      email: a.emailAddress?.address ?? null,
+      response: a.status?.response ?? null,
+    })),
+  };
 }
 
 export interface MailInput {

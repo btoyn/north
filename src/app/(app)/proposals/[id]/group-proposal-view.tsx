@@ -55,6 +55,8 @@ export interface GroupProposalData {
   status: string;
   sentAt: string | null;
   meetingId: string | null;
+  /** Once booked: everyone on the meeting, and what they did with the invite. */
+  booked?: { name: string; firstName: string; responseStatus: string | null }[];
   attendees: GroupProposalAttendee[];
 }
 
@@ -112,12 +114,7 @@ export function GroupProposalView({ data }: { data: GroupProposalData }) {
       <AutoReadReplies replies={unread} />
       {/* The useful output: one date, called out. */}
       {booked ? (
-        <div className="rounded-[18px] border border-teal-border bg-teal-soft px-5 py-4">
-          <p className="text-[14px] font-semibold text-[#1f6b60]">On the calendar.</p>
-          <p className="mt-0.5 text-[13.5px] text-[#1f6b60]">
-            Everyone on it counts as covered from now, not from the day it happens.
-          </p>
-        </div>
+        <BookedCard booked={data.booked ?? []} />
       ) : tally.bestIndex !== null ? (
         <ConfirmCard
           data={data}
@@ -384,6 +381,63 @@ function ReplyForm({
           Cancel
         </Button>
       </div>
+    </div>
+  );
+}
+
+/**
+ * What happened to the invitation.
+ *
+ * The distinction this draws is the whole reason the read-back exists: being
+ * on the meeting is not the same as having agreed to come, and only the people
+ * who agreed have had their clock reset. Saying "everyone is covered" when
+ * three of the five never answered is the comfortable lie this app is for
+ * catching.
+ */
+function BookedCard({
+  booked,
+}: {
+  booked: { name: string; firstName: string; responseStatus: string | null }[];
+}) {
+  const accepted = booked.filter((a) => a.responseStatus === "confirmed");
+  const declined = booked.filter((a) => a.responseStatus === "declined");
+  const tentative = booked.filter((a) => a.responseStatus === "tentative");
+  const quiet = booked.filter(
+    (a) => !["confirmed", "declined", "tentative"].includes(a.responseStatus ?? ""),
+  );
+
+  return (
+    <div className="rounded-[18px] border border-teal-border bg-teal-soft px-5 py-4">
+      <p className="text-[14px] font-semibold text-[#1f6b60]">On the calendar.</p>
+      {booked.length === 0 ? (
+        <p className="mt-0.5 text-[13.5px] text-[#1f6b60]">
+          Everyone who said yes counts as covered from now, not from the day it happens.
+        </p>
+      ) : (
+        <>
+          <p className="mt-0.5 text-[13.5px] text-[#1f6b60]">
+            {accepted.length} of {booked.length} accepted. They count as covered from now, not
+            from the day it happens.
+          </p>
+          {tentative.length > 0 && (
+            <p className="mt-1 text-[13px] text-[#1f6b60]">
+              {formatNameList(tentative.map((a) => a.firstName))} said maybe, which doesn&apos;t
+              count yet.
+            </p>
+          )}
+          {quiet.length > 0 && (
+            <p className="mt-1 text-[13px] text-[#1f6b60]">
+              Still nothing from {formatNameList(quiet.map((a) => a.firstName))}. The invite is in
+              their calendar; accepting it is what moves their clock.
+            </p>
+          )}
+          {declined.length > 0 && (
+            <p className="mt-1 text-[13px] text-[#1f6b60]">
+              {formatNameList(declined.map((a) => a.firstName))} declined.
+            </p>
+          )}
+        </>
+      )}
     </div>
   );
 }
