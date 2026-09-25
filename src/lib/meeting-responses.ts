@@ -92,3 +92,40 @@ export function responseChanges(
   }
   return changes;
 }
+
+export interface MissingAttendee {
+  lenderId: string;
+  responseStatus: ResponseStatus;
+}
+
+/**
+ * Partners who are on the calendar event but not on the meeting in North.
+ *
+ * He adds people to an invitation in Outlook -- it is one click there and it
+ * is the obvious thing to do when somebody gets left off. North could not see
+ * it: the read-back only ever updated rows that already existed, so a partner
+ * added that way would accept the invite, have nothing to accept it against,
+ * and read as untouched forever.
+ *
+ * So the calendar is allowed to add people, not just answer for them. Only
+ * partners, only ones already on the event, and anyone with no answer yet
+ * lands as `invited`, which is the truth and counts for nothing until they
+ * accept.
+ */
+export function missingAttendees(
+  rows: readonly AttendeeRow[],
+  fromGraph: readonly GraphAttendeeResponse[],
+  lenderIdByEmail: ReadonlyMap<string, string>,
+): MissingAttendee[] {
+  const known = new Set(rows.map((r) => r.lenderId));
+  const seen = new Set<string>();
+  const missing: MissingAttendee[] = [];
+
+  for (const a of fromGraph) {
+    const lenderId = lenderIdByEmail.get(normalize(a.email));
+    if (!lenderId || known.has(lenderId) || seen.has(lenderId)) continue;
+    seen.add(lenderId);
+    missing.push({ lenderId, responseStatus: responseStatusFromGraph(a.response) ?? "invited" });
+  }
+  return missing;
+}
