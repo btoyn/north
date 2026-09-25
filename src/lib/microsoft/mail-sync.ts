@@ -101,9 +101,10 @@ export async function syncMailbox(): Promise<MailSyncResult> {
   await supabase.from("mail_sync_state").upsert(
     {
       user_id: user.id,
-      // Only a clean sweep moves the mark. A partial one leaves it where it
-      // was so the next run re-covers what the failure interrupted.
-      ...(fetched.ok ? { last_synced_at: ranAt.toISOString() } : {}),
+      // Only a sweep that both read and saved moves the mark. Fetching cleanly
+      // and failing every insert used to count as clean, which quietly burned
+      // the ninety-day backfill on runs that wrote nothing.
+      ...(fetched.ok && !write.error ? { last_synced_at: ranAt.toISOString() } : {}),
       last_run_at: ranAt.toISOString(),
       last_result: write.error
         ? "write_failed"
