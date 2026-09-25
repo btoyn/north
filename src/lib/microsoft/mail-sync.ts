@@ -101,6 +101,10 @@ export async function syncMailbox(): Promise<MailSyncResult> {
       last_run_at: ranAt.toISOString(),
       last_result: fetched.ok ? "ok" : (fetched.failure ?? "unavailable"),
       last_logged_count: logged,
+      // How many messages the sweep actually looked at. Without it, "logged
+      // nothing" cannot be told apart from "saw nothing".
+      last_scanned_count: fetched.messages.length,
+      last_detail: fetched.detail ?? null,
     },
     { onConflict: "user_id" },
   );

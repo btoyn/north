@@ -13,6 +13,7 @@ export interface MailScanState {
   lastRunAt: string | null;
   lastResult: string | null;
   lastLoggedCount: number;
+  lastScannedCount: number;
   everSynced: boolean;
 }
 
@@ -44,13 +45,21 @@ export function MailScanCard({ state }: { state: MailScanState }) {
       const res = await fetch("/api/microsoft/mail-sync?force=1", { method: "POST" });
       const result = (await res.json()) as {
         logged?: number;
+        scanned?: number;
         ok?: boolean;
         failure?: string;
         error?: string;
       };
       if (result.error) setNote(result.error);
       else if (result.failure) setNote(FAILURE_TEXT[result.failure] ?? "That didn't work.");
-      else setNote(result.logged ? `Logged ${result.logged} new.` : "Nothing new to log.");
+      else {
+        // Both numbers, always. "Nothing new" on its own hides the difference
+        // between a quiet mailbox and a sweep that is matching nobody.
+        const scanned = result.scanned ?? 0;
+        setNote(
+          `Read ${scanned} message${scanned === 1 ? "" : "s"}, logged ${result.logged ?? 0}.`,
+        );
+      }
       router.refresh();
     } catch {
       setNote("That didn't work. Try again.");
@@ -105,8 +114,10 @@ export function MailScanCard({ state }: { state: MailScanState }) {
         ) : (
           <p className="text-muted">
             {state.lastRunAt
-              ? `Last checked ${new Date(state.lastRunAt).toLocaleString()}${
-                  state.lastLoggedCount ? `, logging ${state.lastLoggedCount}` : ""
+              ? `Last checked ${new Date(state.lastRunAt).toLocaleString()}: read ${
+                  state.lastScannedCount
+                } message${state.lastScannedCount === 1 ? "" : "s"}, logged ${
+                  state.lastLoggedCount
                 }.`
               : "Not run yet. The first sweep reaches back ninety days."}
             {failed ? ` ${FAILURE_TEXT[state.lastResult!] ?? state.lastResult}` : ""}

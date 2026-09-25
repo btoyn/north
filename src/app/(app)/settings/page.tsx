@@ -40,7 +40,7 @@ export default async function SettingsPage({
     listInvites(),
     supabase
       .from("mail_sync_state")
-      .select("last_run_at, last_result, last_logged_count, last_synced_at")
+      .select("last_run_at, last_result, last_logged_count, last_scanned_count, last_synced_at")
       .maybeSingle(),
     getConnection(),
   ]);
@@ -96,6 +96,7 @@ export default async function SettingsPage({
             lastRunAt: mailState?.last_run_at ?? null,
             lastResult: mailState?.last_result ?? null,
             lastLoggedCount: mailState?.last_logged_count ?? 0,
+            lastScannedCount: mailState?.last_scanned_count ?? 0,
             everSynced: Boolean(mailState?.last_synced_at),
           }}
         />
