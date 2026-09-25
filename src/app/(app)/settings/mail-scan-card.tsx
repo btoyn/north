@@ -53,6 +53,7 @@ export function MailScanCard({ state }: { state: MailScanState }) {
         detail?: string;
         error?: string;
         responses?: { checked?: number; updated?: number; added?: number; rescheduled?: number };
+        calendar?: { scanned?: number; imported?: number };
       };
       if (result.error) setNote(result.error);
       else if (result.failure) {
@@ -60,30 +61,42 @@ export function MailScanCard({ state }: { state: MailScanState }) {
         setNote(result.detail ? `${why} ${result.detail}` : why);
       }
       else {
-        // Both numbers, always. "Nothing new" on its own hides the difference
-        // between a quiet mailbox and a sweep that is matching nobody.
+        // Both mail numbers, always: "nothing new" on its own hides the
+        // difference between a quiet mailbox and a sweep matching nobody. The
+        // calendar lines only appear when something happened, because nothing
+        // happening there is just a quiet week, not a symptom.
         const scanned = result.scanned ?? 0;
-        // Invitation answers only get a mention when there were some. The two
-        // mail numbers are always shown because a zero there is diagnostic;
-        // nobody having touched an invite since the last run is just quiet.
+        const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
+
+        const lines = [
+          `Read ${scanned} message${scanned === 1 ? "" : "s"}, logged ${result.logged ?? 0}.`,
+        ];
+
         const accepted = result.responses?.updated ?? 0;
-        const added = result.responses?.added ?? 0;
-        const answers =
-          accepted > 0
-            ? ` ${accepted} invitation ${accepted === 1 ? "answer" : "answers"} came back.`
-            : "";
+        if (accepted > 0) {
+          lines.push(`${accepted} invitation ${plural(accepted, "answer", "answers")} came back.`);
+        }
+
         const moved = result.responses?.rescheduled ?? 0;
-        const times =
-          moved > 0
-            ? ` ${moved} ${moved === 1 ? "meeting" : "meetings"} updated from your calendar.`
-            : "";
-        const picked =
-          added > 0
-            ? ` Picked up ${added} ${added === 1 ? "person" : "people"} added to a meeting in Outlook.`
-            : "";
-        setNote(
-          `Read ${scanned} message${scanned === 1 ? "" : "s"}, logged ${result.logged ?? 0}.${answers}${times}${picked}`,
-        );
+        if (moved > 0) {
+          lines.push(`${moved} ${plural(moved, "meeting", "meetings")} updated from your calendar.`);
+        }
+
+        const added = result.responses?.added ?? 0;
+        if (added > 0) {
+          lines.push(
+            `Picked up ${added} ${plural(added, "person", "people")} added to a meeting in Outlook.`,
+          );
+        }
+
+        const brought = result.calendar?.imported ?? 0;
+        if (brought > 0) {
+          lines.push(
+            `Found ${brought} ${plural(brought, "meeting", "meetings")} in your calendar that weren't here.`,
+          );
+        }
+
+        setNote(lines.join(" "));
       }
       router.refresh();
     } catch {

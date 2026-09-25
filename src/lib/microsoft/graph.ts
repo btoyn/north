@@ -5,6 +5,7 @@ import { getAccessToken } from "./tokens";
 import { parseGraphInstant } from "./free-busy";
 import type { MailMessage } from "@/lib/mail-match";
 import type { GraphAttendeeResponse } from "@/lib/meeting-responses";
+import type { CalendarEvent } from "@/lib/calendar-import";
 import {
   busyBlocksFromSchedule,
   mergeBusyBlocks,
@@ -213,6 +214,74 @@ export async function getEventResponses(
       cancelled: Boolean(data.isCancelled),
     },
   };
+}
+
+/**
+ * Every event in a window, with enough of each to decide whether it is a
+ * meeting with a partner.
+ *
+ * `calendarView` rather than `/me/events` because it expands recurrences: a
+ * standing monthly breakfast should be a meeting each month, not one row in
+ * 2024. `$select` keeps bodies out of the response -- North has never stored
+ * the contents of anything and this does not start.
+ */
+export async function listCalendarEvents(
+  from: Date,
+  to: Date,
+  maxPages = 10,
+): Promise<{ events: CalendarEvent[]; ok: boolean; failure?: GraphFailure; detail?: string }> {
+  const query = new URLSearchParams({
+    startDateTime: from.toISOString(),
+    endDateTime: to.toISOString(),
+    $select: "id,subject,start,end,isCancelled,organizer,attendees,location",
+    $top: "250",
+  });
+
+  let url: string | null = `/me/calendarView?${query.toString()}`;
+  const events: CalendarEvent[] = [];
+
+  for (let page = 0; page < maxPages && url; page += 1) {
+    const result = await graphFetch(url, { scope: SCOPE_FOR.freeBusy });
+    if (!result.ok) {
+      return { events, ok: false, failure: result.failure, detail: result.detail };
+    }
+
+    const data = result.data as {
+      value?: {
+        id?: string;
+        subject?: string;
+        start?: { dateTime?: string; timeZone?: string };
+        end?: { dateTime?: string; timeZone?: string };
+        isCancelled?: boolean;
+        organizer?: { emailAddress?: { address?: string } };
+        attendees?: { emailAddress?: { address?: string }; status?: { response?: string } }[];
+        location?: { displayName?: string };
+      }[];
+      "@odata.nextLink"?: string;
+    };
+
+    for (const e of data.value ?? []) {
+      if (!e.id) continue;
+      events.push({
+        id: e.id,
+        subject: e.subject ?? null,
+        start: parseGraphInstant(e.start?.dateTime, e.start?.timeZone, { utcOnly: true }),
+        end: parseGraphInstant(e.end?.dateTime, e.end?.timeZone, { utcOnly: true }),
+        cancelled: Boolean(e.isCancelled),
+        organizerEmail: e.organizer?.emailAddress?.address ?? null,
+        attendees: (e.attendees ?? []).map((a) => ({
+          email: a.emailAddress?.address ?? null,
+          response: a.status?.response ?? null,
+        })),
+        locationName: e.location?.displayName ?? null,
+      });
+    }
+
+    const next = data["@odata.nextLink"];
+    url = next ? next.replace(GRAPH_BASE, "") : null;
+  }
+
+  return { events, ok: true };
 }
 
 export interface MailInput {
