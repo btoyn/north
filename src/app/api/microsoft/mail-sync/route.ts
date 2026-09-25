@@ -18,6 +18,13 @@ import { syncMailbox } from "@/lib/microsoft/mail-sync";
 /** Left alone for this long between automatic sweeps. */
 const MIN_MINUTES_BETWEEN_RUNS = 30;
 
+/**
+ * A ninety-day backfill is tens of Graph round trips and will not finish inside
+ * the default ten seconds. Everyday sweeps take one request and return long
+ * before this.
+ */
+export const maxDuration = 120;
+
 export async function POST(request: Request) {
   const supabase = await createClient();
   const {

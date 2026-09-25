@@ -259,20 +259,25 @@ export interface ListMessagesResult {
  * accident, and never crosses the wire into this app at all. What comes back
  * is who, when, and the subject line.
  *
- * Paging is followed to a hard cap. A first sync over a busy mailbox should
- * take a few pages; anything wildly beyond that means a filter has gone wrong,
- * and a bounded wrong answer is easier to notice and recover from than an
- * unbounded one.
+ * Paging is followed to a hard cap of 40 pages at 500 messages, so twenty
+ * thousand in one sweep. The first attempt used 100 a page and twenty pages,
+ * and a real ninety-day backfill stopped dead at 2,000 messages having covered
+ * five weeks. The cap still exists because an unbounded loop against somebody's
+ * mailbox is worse than a truncated one, but it is now far above any plausible
+ * ninety days of mail.
+ *
+ * `detail` says when the cap was reached, and the caller surfaces it, because a
+ * sweep that quietly stops short is the thing that just cost an afternoon.
  */
 export async function listMessagesSince(
   since: Date,
-  maxPages = 20,
+  maxPages = 40,
 ): Promise<ListMessagesResult> {
   const select = "id,subject,sentDateTime,receivedDateTime,isDraft,from,sender,toRecipients,ccRecipients";
   let path =
     `/me/messages?$select=${select}` +
     `&$filter=receivedDateTime ge ${since.toISOString()}` +
-    `&$orderby=receivedDateTime desc&$top=100`;
+    `&$orderby=receivedDateTime desc&$top=500`;
 
   const messages: MailMessage[] = [];
 
