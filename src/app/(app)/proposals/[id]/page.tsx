@@ -36,6 +36,16 @@ export default async function ProposalPage({ params }: { params: Promise<{ id: s
     )
     .eq("proposal_id", id);
 
+  // Once it is booked, who has actually accepted the invitation. Being on the
+  // meeting is not the same as having agreed to come, and only the ones who
+  // agreed are counted as covered.
+  const { data: booked } = proposal.meeting_id
+    ? await supabase
+        .from("meeting_attendees")
+        .select("response_status, lender:lenders(full_name, first_name)")
+        .eq("meeting_id", proposal.meeting_id)
+    : { data: null };
+
   const institution = proposal.institution as unknown as {
     name: string;
     territory: string | null;
@@ -51,6 +61,14 @@ export default async function ProposalPage({ params }: { params: Promise<{ id: s
     status: proposal.status,
     sentAt: proposal.sent_at,
     meetingId: proposal.meeting_id,
+    booked: (booked ?? []).map((a) => {
+      const lender = a.lender as unknown as { full_name: string; first_name: string } | null;
+      return {
+        name: lender?.full_name ?? "Unknown",
+        firstName: lender?.first_name ?? "they",
+        responseStatus: a.response_status,
+      };
+    }),
     attendees: (attendees ?? [])
       .map((a) => {
         const lender = a.lender as unknown as {
