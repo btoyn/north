@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  missingAttendees,
   responseChanges,
   responseStatusFromGraph,
   type AttendeeRow,
@@ -97,5 +98,71 @@ describe("responseChanges", () => {
     expect(
       responseChanges([row()], [{ email: "someone.else@im504.com", response: "accepted" }]),
     ).toEqual([]);
+  });
+});
+
+describe("missingAttendees", () => {
+  const index = new Map([
+    ["josh@cachevalleybank.com", "josh"],
+    ["dan@zionsbank.com", "dan"],
+  ]);
+  const dan: AttendeeRow = {
+    lenderId: "dan",
+    email: "dan@zionsbank.com",
+    responseStatus: "confirmed",
+  };
+
+  // He added somebody to the invitation in Outlook. North has to see it, or
+  // that person accepts against nothing and reads as untouched forever.
+  it("picks up a partner added to the event outside North", () => {
+    expect(
+      missingAttendees(
+        [dan],
+        [
+          { email: "dan@zionsbank.com", response: "accepted" },
+          { email: "josh@cachevalleybank.com", response: "none" },
+        ],
+        index,
+      ),
+    ).toEqual([{ lenderId: "josh", responseStatus: "invited" }]);
+  });
+
+  it("carries their answer over when they have already given one", () => {
+    expect(
+      missingAttendees([dan], [{ email: "josh@cachevalleybank.com", response: "accepted" }], index),
+    ).toEqual([{ lenderId: "josh", responseStatus: "confirmed" }]);
+  });
+
+  it("adds nobody who is already on the meeting", () => {
+    expect(
+      missingAttendees([dan], [{ email: "dan@zionsbank.com", response: "accepted" }], index),
+    ).toEqual([]);
+  });
+
+  // Colleagues and room mailboxes are on plenty of invitations.
+  it("adds nobody who is not a partner", () => {
+    expect(
+      missingAttendees(
+        [dan],
+        [
+          { email: "boardroom@im504.com", response: "accepted" },
+          { email: "btoyn@im504.com", response: "organizer" },
+        ],
+        index,
+      ),
+    ).toEqual([]);
+  });
+
+  it("adds a person once even if they are on the event twice", () => {
+    expect(
+      missingAttendees(
+        [dan],
+        [
+          { email: "josh@cachevalleybank.com", response: "accepted" },
+          { email: "JOSH@cachevalleybank.com", response: "declined" },
+        ],
+        index,
+      ),
+    ).toHaveLength(1);
   });
 });

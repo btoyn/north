@@ -52,7 +52,7 @@ export function MailScanCard({ state }: { state: MailScanState }) {
         failure?: string;
         detail?: string;
         error?: string;
-        responses?: { checked?: number; updated?: number };
+        responses?: { checked?: number; updated?: number; added?: number };
       };
       if (result.error) setNote(result.error);
       else if (result.failure) {
@@ -67,12 +67,17 @@ export function MailScanCard({ state }: { state: MailScanState }) {
         // mail numbers are always shown because a zero there is diagnostic;
         // nobody having touched an invite since the last run is just quiet.
         const accepted = result.responses?.updated ?? 0;
+        const added = result.responses?.added ?? 0;
         const answers =
           accepted > 0
             ? ` ${accepted} invitation ${accepted === 1 ? "answer" : "answers"} came back.`
             : "";
+        const picked =
+          added > 0
+            ? ` Picked up ${added} ${added === 1 ? "person" : "people"} added to a meeting in Outlook.`
+            : "";
         setNote(
-          `Read ${scanned} message${scanned === 1 ? "" : "s"}, logged ${result.logged ?? 0}.${answers}`,
+          `Read ${scanned} message${scanned === 1 ? "" : "s"}, logged ${result.logged ?? 0}.${answers}${picked}`,
         );
       }
       router.refresh();
