@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { coverageStatus } from "../coverage";
 import {
+  TIERS,
+  TIER_BADGE_CLASS,
   TIER_GOAL_DAYS,
   countsAsTouch,
   isDealOnly,
@@ -8,6 +10,7 @@ import {
   readTier,
   summarizeTiers,
   tierGoalDays,
+  type Tier,
 } from "../tiers";
 
 const NOW = new Date("2026-09-17T12:00:00Z");
@@ -223,5 +226,33 @@ describe("isDealOnly", () => {
     expect(
       isDealOnly("C", { personal: iso(10), conversation: null, dealUpdate: iso(10) }, 90, NOW),
     ).toBe(true);
+  });
+});
+
+describe("TIER_BADGE_CLASS", () => {
+  // The bug this catches: D was added as a tier and never given a colour, so
+  // its badge rendered with no background at all -- a bare letter where every
+  // other tier had a filled circle.
+  it("gives every tier a style", () => {
+    for (const tier of TIERS) {
+      expect(TIER_BADGE_CLASS[tier]?.trim()).toBeTruthy();
+    }
+  });
+
+  it("gives the four real tiers four different colours", () => {
+    const used = ["A", "B", "C", "D"].map((t) => TIER_BADGE_CLASS[t as Tier]);
+    expect(new Set(used).size).toBe(4);
+  });
+
+  it("puts a white letter on each of them", () => {
+    for (const tier of ["A", "B", "C", "D"] as Tier[]) {
+      expect(TIER_BADGE_CLASS[tier]).toContain("text-white");
+    }
+  });
+
+  // Not a fifth colour on purpose: an untiered partner is an open question.
+  it("leaves the untiered badge uncoloured", () => {
+    expect(TIER_BADGE_CLASS.unassigned).not.toContain("text-white");
+    expect(TIER_BADGE_CLASS.unassigned).toContain("dashed");
   });
 });

@@ -14,6 +14,7 @@ import {
   type SphereDef,
 } from "@/lib/spheres";
 import { TIER_CADENCE, TIER_GOAL_DAYS } from "@/lib/tiers";
+import { TierBadge } from "@/components/tier-picker";
 import { cn } from "@/lib/utils";
 
 export const metadata = { title: "Tiers" };
@@ -132,7 +133,12 @@ function TierCard({ sphere, count }: { sphere: SphereDef; count: SphereCount }) 
       className="group flex flex-col rounded-[18px] border border-border bg-surface p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)] transition-colors hover:border-primary/35 hover:bg-primary-soft/25"
     >
       <div className="flex items-baseline justify-between gap-2">
-        <span className="text-[15px] font-semibold">{sphere.label}</span>
+        <span className="flex items-center gap-2 text-[15px] font-semibold">
+          {/* The letter in its own colour, so the page of tiers is scannable
+              as colours rather than as four lines of similar text. */}
+          <TierBadge tier={tier} />
+          {sphere.label}
+        </span>
         <span className="text-[22px] font-bold leading-none tabular-nums text-navy">
           {count.total}
         </span>

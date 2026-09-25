@@ -54,6 +54,31 @@ export const TIER_GOAL_DAYS: Record<Tier, number | null> = {
   unassigned: null,
 };
 
+/**
+ * The colour a tier wears, wherever it appears.
+ *
+ * One map so the badge on a list row, the picker on a partner and the card on
+ * the Tiers page can never drift apart. It lives beside the labels and the
+ * cadences because it answers the same kind of question: what does B mean.
+ *
+ * A stays IMBL blue. B, C and D run green, gold and red, which is the order
+ * anybody reads without being told -- and, not incidentally, the order of how
+ * much attention the partner is getting versus how much they are owed. Every
+ * one of them carries a white letter, because the earlier scheme leaned on
+ * tints of the same blue and at a glance a B and a C looked identical.
+ *
+ * `unassigned` is deliberately not a colour. An untiered partner is an
+ * unanswered question, and a dashed outline says that in a way a fifth colour
+ * would not.
+ */
+export const TIER_BADGE_CLASS: Record<Tier, string> = {
+  A: "bg-primary text-white",
+  B: "bg-teal text-white",
+  C: "bg-gold text-white",
+  D: "bg-danger text-white",
+  unassigned: "border border-dashed border-border text-muted",
+};
+
 export const TIER_CADENCE: Record<Tier, string> = {
   A: "Monthly",
   B: "Monthly",

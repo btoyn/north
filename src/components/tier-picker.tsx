@@ -2,7 +2,14 @@
 
 import { useOptimistic, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { TIERS, TIER_CADENCE, TIER_LABEL, readTier, type Tier } from "@/lib/tiers";
+import {
+  TIERS,
+  TIER_BADGE_CLASS,
+  TIER_CADENCE,
+  TIER_LABEL,
+  readTier,
+  type Tier,
+} from "@/lib/tiers";
 import { cn } from "@/lib/utils";
 import { setLenderTier } from "@/app/(app)/partners/actions";
 
@@ -60,8 +67,10 @@ export function TierPicker({
             title={`${TIER_LABEL[t]} — ${TIER_CADENCE[t].toLowerCase()}`}
             className={cn(
               "min-h-8 border-r border-border px-2.5 text-[12px] font-semibold transition-colors last:border-r-0",
+              // The picked tier wears its own colour, so choosing B and
+              // reading a B badge are the same fact in the same green.
               shown === t
-                ? "bg-primary text-white"
+                ? TIER_BADGE_CLASS[t]
                 : "text-muted hover:bg-primary-soft hover:text-primary",
             )}
           >
@@ -82,10 +91,7 @@ export function TierBadge({ tier, className }: { tier: string | null; className?
       title={`${TIER_LABEL[t]} — ${TIER_CADENCE[t].toLowerCase()}`}
       className={cn(
         "inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] font-bold",
-        t === "A" && "bg-primary text-white",
-        t === "B" && "bg-primary-soft text-[#1a4ad9]",
-        t === "C" && "bg-black/[0.05] text-muted",
-        t === "unassigned" && "border border-dashed border-border text-muted",
+        TIER_BADGE_CLASS[t],
         className,
       )}
     >
