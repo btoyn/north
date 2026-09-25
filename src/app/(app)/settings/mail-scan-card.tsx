@@ -14,10 +14,12 @@ export interface MailScanState {
   lastResult: string | null;
   lastLoggedCount: number;
   lastScannedCount: number;
+  lastDetail: string | null;
   everSynced: boolean;
 }
 
 const FAILURE_TEXT: Record<string, string> = {
+  write_failed: "Read the mail but could not save it.",
   not_connected: "No Microsoft account is connected.",
   reconnect_needed: "Microsoft stopped accepting the connection. Reconnect above.",
   missing_scope: "Reading mail wasn't granted. An administrator has to approve it.",
@@ -48,10 +50,14 @@ export function MailScanCard({ state }: { state: MailScanState }) {
         scanned?: number;
         ok?: boolean;
         failure?: string;
+        detail?: string;
         error?: string;
       };
       if (result.error) setNote(result.error);
-      else if (result.failure) setNote(FAILURE_TEXT[result.failure] ?? "That didn't work.");
+      else if (result.failure) {
+        const why = FAILURE_TEXT[result.failure] ?? "That didn't work.";
+        setNote(result.detail ? `${why} ${result.detail}` : why);
+      }
       else {
         // Both numbers, always. "Nothing new" on its own hides the difference
         // between a quiet mailbox and a sweep that is matching nobody.
@@ -120,7 +126,11 @@ export function MailScanCard({ state }: { state: MailScanState }) {
                   state.lastLoggedCount
                 }.`
               : "Not run yet. The first sweep reaches back ninety days."}
-            {failed ? ` ${FAILURE_TEXT[state.lastResult!] ?? state.lastResult}` : ""}
+            {failed
+              ? ` ${FAILURE_TEXT[state.lastResult!] ?? state.lastResult}${
+                  state.lastDetail ? ` ${state.lastDetail}` : ""
+                }`
+              : ""}
           </p>
         )}
 

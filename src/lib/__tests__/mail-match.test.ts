@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  MAIL_ACTIVITY_SOURCE,
   buildLenderIndex,
   diagnose,
   externalId,
@@ -251,5 +252,15 @@ describe("diagnose", () => {
       fromPartner: 0,
       unmatchedDomains: [],
     });
+  });
+});
+
+describe("the activity source", () => {
+  it("is a value the database actually allows", () => {
+    // The activities check constraint permits manual, import, assistant,
+    // outlook and system. A sixth value invented here fails every insert, and
+    // the failure is invisible from the sweep's own numbers.
+    const ALLOWED = ["manual", "import", "assistant", "outlook", "system"];
+    expect(ALLOWED).toContain(MAIL_ACTIVITY_SOURCE);
   });
 });

@@ -191,6 +191,15 @@ export function matchMessages(
   return out;
 }
 
+/**
+ * What the sweep writes in `activities.source`.
+ *
+ * Constrained by the database to one of five values. It lives here beside a
+ * test rather than inline at the insert, because the first version invented
+ * "microsoft", failed every insert, and reported the mailbox as empty.
+ */
+export const MAIL_ACTIVITY_SOURCE = "outlook";
+
 /** What goes in `activities.external_id`, and what dedupe checks against. */
 export function externalId(messageId: string, lenderId: string): string {
   return `msgraph:${messageId}:${lenderId}`;

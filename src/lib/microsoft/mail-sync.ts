@@ -2,6 +2,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { COVERAGE_ACTIVITY_TYPES, isPersonalTouch } from "@/lib/coverage";
 import {
+  MAIL_ACTIVITY_SOURCE,
   buildLenderIndex,
   diagnose,
   externalId,
@@ -93,7 +94,8 @@ export async function syncMailbox(): Promise<MailSyncResult> {
   );
 
   const candidates = matchMessages(fetched.messages, index, selfAddresses);
-  const logged = await insertMatches(supabase, user.id, candidates, institutionOf);
+  const write = await insertMatches(supabase, user.id, candidates, institutionOf);
+  const logged = write.inserted;
   const diagnostics = diagnose(fetched.messages, index, selfAddresses);
 
   await supabase.from("mail_sync_state").upsert(
@@ -103,12 +105,16 @@ export async function syncMailbox(): Promise<MailSyncResult> {
       // was so the next run re-covers what the failure interrupted.
       ...(fetched.ok ? { last_synced_at: ranAt.toISOString() } : {}),
       last_run_at: ranAt.toISOString(),
-      last_result: fetched.ok ? "ok" : (fetched.failure ?? "unavailable"),
+      last_result: write.error
+        ? "write_failed"
+        : fetched.ok
+          ? "ok"
+          : (fetched.failure ?? "unavailable"),
       last_logged_count: logged,
       // How many messages the sweep actually looked at. Without it, "logged
       // nothing" cannot be told apart from "saw nothing".
       last_scanned_count: fetched.messages.length,
-      last_detail: fetched.detail ?? null,
+      last_detail: write.error ?? fetched.detail ?? null,
       last_diagnostics: diagnostics,
     },
     { onConflict: "user_id" },
@@ -117,9 +123,9 @@ export async function syncMailbox(): Promise<MailSyncResult> {
   return {
     logged,
     scanned: fetched.messages.length,
-    ok: fetched.ok,
-    failure: fetched.failure,
-    detail: fetched.detail,
+    ok: fetched.ok && !write.error,
+    failure: write.error ? "write_failed" : fetched.failure,
+    detail: write.error ?? fetched.detail,
     diagnostics,
   };
 }
@@ -136,8 +142,8 @@ async function insertMatches(
   userId: string,
   matches: readonly MatchedMail[],
   institutionOf: ReadonlyMap<string, string | null>,
-): Promise<number> {
-  if (matches.length === 0) return 0;
+): Promise<{ inserted: number; error?: string }> {
+  if (matches.length === 0) return { inserted: 0 };
 
   const rows = matches.map((m) => ({
     user_id: userId,
@@ -153,7 +159,7 @@ async function insertMatches(
     personal_touch: isPersonalTouch(m.activityType),
     counts_for_coverage: COVERAGE_ACTIVITY_TYPES.has(m.activityType),
     initiated_by_lender: m.initiatedByLender,
-    source: "microsoft",
+    source: MAIL_ACTIVITY_SOURCE,
     external_id: externalId(m.messageId, m.lenderId),
   }));
 
@@ -162,9 +168,9 @@ async function insertMatches(
     .upsert(rows, { onConflict: "user_id,external_id", ignoreDuplicates: true })
     .select("id");
 
-  if (error) {
-    console.error("Mail sync could not write activities:", error.message);
-    return 0;
-  }
-  return data?.length ?? 0;
+  // A write that fails has to reach the person looking at the screen. Sending
+  // it to the console and reporting "0 logged" is how two separate constraint
+  // failures here looked exactly like an empty mailbox.
+  if (error) return { inserted: 0, error: error.message };
+  return { inserted: data?.length ?? 0 };
 }
