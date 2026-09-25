@@ -311,3 +311,33 @@ export async function listMessagesSince(
 
   return { messages, ok: true, detail: "stopped at the page cap" };
 }
+
+
+/**
+ * The text of one reply, for a message already known to answer an open ask.
+ *
+ * Deliberately one message at a time and never part of the sweep. The sweep
+ * reads headers for a whole mailbox and must not pull bodies with them; this
+ * runs only for the handful of messages a proposal is waiting on, which is the
+ * narrowest place the text can be read and still be useful.
+ *
+ * `uniqueBody` is the part the person actually typed, with the quoted original
+ * removed by Exchange. Without it every reply carries the proposal's own dates
+ * quoted underneath and the reader hands them back as if they were an answer.
+ */
+export async function getReplyText(
+  messageId: string,
+): Promise<{ text?: string; failure?: GraphFailure }> {
+  const result = await graphFetch(
+    `/me/messages/${encodeURIComponent(messageId)}?$select=uniqueBody`,
+    {
+      scope: SCOPE_FOR.readMail,
+      headers: { prefer: 'outlook.body-content-type="text"' },
+    },
+  );
+  if (!result.ok) return { failure: result.failure };
+
+  const body = result.data as { uniqueBody?: { content?: string } };
+  const text = body.uniqueBody?.content?.trim();
+  return text ? { text } : {};
+}

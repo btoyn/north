@@ -25,10 +25,10 @@ export interface ReplyReading {
 }
 
 const AFFIRMATIVE =
-  /\b(sounds good|works for me|that works|works great|yes|yep|yeah|sure|perfect|see you then|book it|let'?s do it|i'?m free|count me in|see you)\b/;
+  /\b(sounds good|works for me|that works|works great|that'?ll work|will work|yes|yep|yeah|sure|perfect|see you then|book it|let'?s do it|i'?m free|i'?m available|available then|available that day|i can make|i can do|count me in|i'?m in|see you)\b/;
 
 const NEGATIVE =
-  /\b(can'?t|cannot|won'?t work|not going to work|no good|unable|out of town|traveling|travelling|on vacation|slammed|swamped|tied up|another time|rain ?check|have to pass|no can do)\b/;
+  /\b(can'?t|cannot|won'?t work|not going to work|no good|unable|out of town|traveling|travelling|on vacation|slammed|swamped|tied up|another time|rain ?check|have to pass|no can do|but not|not that (one|day|date)|not then|doesn'?t work|does not work)\b/;
 
 const MONTHS = [
   "january", "february", "march", "april", "may", "june",

@@ -12,7 +12,9 @@ import {
   type MatchedMail,
 } from "@/lib/mail-match";
 import { detectReplies } from "@/lib/proposal-replies";
-import { listMessagesSince } from "./graph";
+import { deriveSlotVerdicts } from "@/lib/group-proposal";
+import { readReply } from "@/lib/reply-reader";
+import { getReplyText, listMessagesSince } from "./graph";
 import { getConnection } from "./tokens";
 
 /**
@@ -214,12 +216,22 @@ async function markProposalReplies(
 
   const { data: rows } = await supabase
     .from("meeting_proposal_attendees")
-    .select("proposal_id, lender_id, replied_at, proposal:meeting_proposals(sent_at, status)")
+    .select(
+      "proposal_id, lender_id, replied_at, proposal:meeting_proposals(sent_at, status, offered_slots)",
+    )
     .is("replied_at", null);
 
+  const slotsByProposal = new Map<string, string[]>();
   const open = (rows ?? [])
     .map((r) => {
-      const proposal = r.proposal as unknown as { sent_at: string | null; status: string } | null;
+      const proposal = r.proposal as unknown as {
+        sent_at: string | null;
+        status: string;
+        offered_slots: string[] | null;
+      } | null;
+      if (proposal?.offered_slots) {
+        slotsByProposal.set(r.proposal_id as string, proposal.offered_slots);
+      }
       return {
         proposalId: r.proposal_id as string,
         lenderId: r.lender_id as string,
@@ -230,12 +242,40 @@ async function markProposalReplies(
     .filter((a) => a.proposalSentAt);
 
   const found = detectReplies(open, inbound);
+  const messageFor = new Map(
+    matched
+      .filter((m) => m.direction === "inbound")
+      .map((m) => [`${m.lenderId}:${m.occurredAt}`, m.messageId]),
+  );
   let marked = 0;
 
   for (const reply of found) {
+    const update: Record<string, unknown> = {
+      replied_at: reply.repliedAt,
+      updated_at: new Date().toISOString(),
+    };
+
+    // Pull the text for this one message and let the reader have a go. It
+    // abstains on anything it cannot be sure of, so an unclear verdict still
+    // arrives as "they replied, you decide" rather than a wrong booking.
+    const messageId = messageFor.get(`${reply.lenderId}:${reply.repliedAt}`);
+    const slots = slotsByProposal.get(reply.proposalId) ?? [];
+    if (messageId && slots.length > 0) {
+      const { text } = await getReplyText(messageId);
+      if (text) {
+        const offeredSlots = slots.map((iso) => new Date(iso));
+        const reading = readReply({ text, offeredSlots, now: new Date() });
+        update.reply_text = text;
+        update.reply_intent = reading.intent === "unclear" ? null : reading.intent;
+        update.slot_verdicts = deriveSlotVerdicts({ offeredSlots, reading });
+        update.countered_slot =
+          reading.intent === "countered" ? (reading.slot?.toISOString() ?? null) : null;
+      }
+    }
+
     const { error } = await supabase
       .from("meeting_proposal_attendees")
-      .update({ replied_at: reply.repliedAt, updated_at: new Date().toISOString() })
+      .update(update)
       .eq("proposal_id", reply.proposalId)
       .eq("lender_id", reply.lenderId)
       .is("replied_at", null);

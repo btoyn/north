@@ -122,3 +122,37 @@ describe("readReply — abstaining", () => {
     expect(read(raw).intent).toBe("unclear");
   });
 });
+
+describe("the ways people say yes", () => {
+  const MONDAY = new Date("2026-10-05T12:00:00");
+  const NOW = new Date("2026-09-25T20:00:00");
+
+  const read = (text: string) =>
+    readReply({ text, offeredSlots: [MONDAY], now: NOW });
+
+  it("takes the phrasings that actually turned up", () => {
+    // Both of these came back on the same real lunch ask. "Works for me" was
+    // already read; "I'm available" was not, and an unread yes is worse than
+    // no reader at all because he stops checking.
+    expect(read("Works for me").intent).toBe("accepted");
+    expect(read("I'm available").intent).toBe("accepted");
+  });
+
+  it("takes the other common ones", () => {
+    for (const text of [
+      "That'll work",
+      "I can make that",
+      "I can do that",
+      "I'm in",
+      "Sounds good",
+      "Available then",
+    ]) {
+      expect(read(text).intent, text).toBe("accepted");
+    }
+  });
+
+  it("still refuses a no, however friendly", () => {
+    expect(read("I'm available most days but not that one").intent).not.toBe("accepted");
+    expect(read("Can't make it").intent).toBe("declined");
+  });
+});
