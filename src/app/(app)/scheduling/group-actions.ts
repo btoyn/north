@@ -252,13 +252,85 @@ export async function recordGroupReply(
     .update({
       reply_text: input.replyText,
       replied_at: new Date().toISOString(),
-      reply_intent: input.intent,
+      reply_intent: input.intent === "unclear" ? null : input.intent,
       slot_verdicts: input.slotVerdicts,
       countered_slot: input.intent === "countered" ? (input.counteredSlot ?? null) : null,
+      // Settled. Stamping this is what stops the automatic reader from having
+      // another go at a reply he has already been through by hand.
+      reply_read_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })
     .eq("proposal_id", input.proposalId)
     .eq("lender_id", input.lenderId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/dashboard");
+  revalidatePath("/tiers");
+  revalidatePath(`/proposals/${input.proposalId}`);
+  return {};
+}
+
+export interface RecordReplyReadingInput {
+  proposalId: string;
+  lenderId: string;
+  /** What the reader made of it, read in his timezone. */
+  intent: "accepted" | "declined" | "countered" | "unclear";
+  /** One per offered date, in the same order. */
+  slotVerdicts: SlotVerdict[];
+  /** A date of their own, when the reader found one. */
+  counteredSlot?: string | null;
+}
+
+/**
+ * Writes back a reading the browser did of a reply the sweep fetched.
+ *
+ * The sweep can get the words but not the meaning, because meaning needs his
+ * clock. So the screen reads the text it was handed and posts the verdict
+ * here. No text, no `replied_at` — those came from the sweep and are not this
+ * action's to change.
+ *
+ * `is("reply_read_at", null)` is the whole safety of it: whatever he decided
+ * by hand was stamped read, so this can never land on top of it, and two tabs
+ * doing the same reading write the same row once.
+ */
+export async function recordReplyReading(
+  input: RecordReplyReadingInput,
+): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not signed in." };
+  if (input.slotVerdicts.some((v) => !VERDICTS.has(v))) {
+    return { error: "That reading didn't look valid." };
+  }
+
+  const { data: proposal } = await supabase
+    .from("meeting_proposals")
+    .select("id, offered_slots")
+    .eq("id", input.proposalId)
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (!proposal) return { error: "Proposal not found." };
+  if (input.slotVerdicts.length !== (proposal.offered_slots ?? []).length) {
+    return { error: "That reading didn't line up with the dates offered." };
+  }
+
+  const { error } = await supabase
+    .from("meeting_proposal_attendees")
+    .update({
+      // Unclear is the reader abstaining, and a null intent is how the
+      // dashboard knows to keep asking him to look.
+      reply_intent: input.intent === "unclear" ? null : input.intent,
+      slot_verdicts: input.slotVerdicts,
+      countered_slot: input.intent === "countered" ? (input.counteredSlot ?? null) : null,
+      reply_read_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("proposal_id", input.proposalId)
+    .eq("lender_id", input.lenderId)
+    .is("reply_read_at", null);
 
   if (error) return { error: error.message };
 

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { readReply } from "@/lib/reply-reader";
 import { isUnreadReply } from "@/lib/proposal-replies";
+import { AutoReadReplies, type UnreadReply } from "@/components/auto-read-replies";
 import { describeSlot } from "@/lib/scheduling";
 import { describeGroupProgress, tallyGroupReplies, type SlotVerdict } from "@/lib/group-proposal";
 import { MEETING_TYPE_LABELS } from "@/lib/labels";
@@ -33,8 +34,22 @@ export function ProposalQueue({ data }: { data: QueueData }) {
     return null;
   }
 
+  // Anything the sweep fetched and nobody has read. The dashboard is the screen
+  // he actually lands on, so reading them here means a reply is usually already
+  // interpreted by the time he opens the proposal.
+  const unread: UnreadReply[] = data.groups.flatMap((g) =>
+    g.attendees.map((a) => ({
+      proposalId: g.id,
+      lenderId: a.lenderId,
+      replyText: a.replyText,
+      replyReadAt: a.replyReadAt,
+      offeredSlots: g.offeredSlots,
+    })),
+  );
+
   return (
     <section className="rounded-[18px] border border-border bg-surface p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+      <AutoReadReplies replies={unread} />
       <div className="mb-3.5 flex items-baseline justify-between gap-3">
         <h2 className="eyebrow text-navy/70">Meetings in the works</h2>
         {data.waiting.length > 0 && (

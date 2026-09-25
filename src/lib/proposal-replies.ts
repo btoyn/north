@@ -83,3 +83,27 @@ export function isUnreadReply(attendee: {
 }): boolean {
   return Boolean(attendee.repliedAt) && !attendee.replyIntent;
 }
+
+export interface FetchedReply {
+  replyText: string | null;
+  /** When the browser last interpreted `replyText`. Null means never. */
+  replyReadAt: string | null;
+}
+
+/**
+ * Replies the sweep pulled down that nobody has interpreted yet.
+ *
+ * The sweep fetches the text and stops there, because deciding what "Thursday
+ * works" means needs his clock and the sweep runs in UTC. So the screens read
+ * what the sweep fetched, and this is the queue they work from.
+ *
+ * `replyReadAt`, not `replyIntent`, is what marks one done. An abstention is a
+ * real answer — the reader saying it will not guess — and it leaves the intent
+ * null. Keying off the intent would make every page load re-read the replies
+ * that were honestly unclear, and overwrite a verdict he had settled by hand.
+ */
+export function repliesAwaitingReading<T extends FetchedReply>(
+  attendees: readonly T[],
+): T[] {
+  return attendees.filter((a) => Boolean(a.replyText?.trim()) && !a.replyReadAt);
+}

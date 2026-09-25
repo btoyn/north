@@ -32,7 +32,7 @@ export default async function ProposalPage({ params }: { params: Promise<{ id: s
   const { data: attendees } = await supabase
     .from("meeting_proposal_attendees")
     .select(
-      "lender_id, reply_text, replied_at, reply_intent, slot_verdicts, countered_slot, lender:lenders(full_name, first_name, email)",
+      "lender_id, reply_text, replied_at, reply_intent, reply_read_at, slot_verdicts, countered_slot, lender:lenders(full_name, first_name, email)",
     )
     .eq("proposal_id", id);
 
@@ -65,6 +65,7 @@ export default async function ProposalPage({ params }: { params: Promise<{ id: s
           repliedAt: a.replied_at,
           replyText: a.reply_text,
           replyIntent: a.reply_intent,
+          replyReadAt: a.reply_read_at,
           verdicts: a.slot_verdicts ?? [],
           counteredSlot: a.countered_slot,
         };

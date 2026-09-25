@@ -12,8 +12,6 @@ import {
   type MatchedMail,
 } from "@/lib/mail-match";
 import { detectReplies } from "@/lib/proposal-replies";
-import { deriveSlotVerdicts } from "@/lib/group-proposal";
-import { readReply } from "@/lib/reply-reader";
 import { getReplyText, listMessagesSince } from "./graph";
 import { getConnection } from "./tokens";
 
@@ -50,9 +48,9 @@ export interface MailSyncResult {
   logged: number;
   /** Open meeting asks this sweep noticed an answer to. */
   repliesFound: number;
-  /** Of those, how many the reader could actually read. */
-  repliesRead?: number;
-  /** Why a reply went unread, when one did. */
+  /** Of those, how many the sweep could pull the text of. */
+  repliesFetched?: number;
+  /** Why a reply's text could not be fetched, when one could not. */
   replyNotes?: string[];
   scanned: number;
   ok: boolean;
@@ -137,7 +135,7 @@ export async function syncMailbox(): Promise<MailSyncResult> {
   return {
     logged,
     repliesFound: replies.marked,
-    repliesRead: replies.read,
+    repliesFetched: replies.fetched,
     replyNotes: replies.notes,
     scanned: fetched.messages.length,
     ok: fetched.ok && !write.error,
@@ -201,12 +199,14 @@ async function insertMatches(
 
 
 /**
- * Marks the people who answered an open meeting ask.
+ * Marks the people who answered an open meeting ask, and fetches what they
+ * wrote.
  *
- * Only a flag. `reply_intent` is left null on purpose: that pairing —
- * answered, undecided — is what the dashboard reads to say somebody is waiting
- * on him. Recording the verdict by hand fills the intent in and the nudge goes
- * away.
+ * It stops there. `reply_intent` and `slot_verdicts` are left alone, and
+ * `reply_read_at` stays null, because interpreting the words is wall-clock
+ * work and this runs in UTC. The screens pick it up from there. Until they do,
+ * answered-but-undecided is what the dashboard reads to say somebody is
+ * waiting on him.
  *
  * Best effort, like the rest of the sweep. A proposal that cannot be updated is
  * not a reason to throw away the mail that was just logged.
@@ -214,12 +214,12 @@ async function insertMatches(
 async function markProposalReplies(
   supabase: Awaited<ReturnType<typeof createClient>>,
   matched: readonly MatchedMail[],
-): Promise<{ marked: number; read: number; notes: string[] }> {
+): Promise<{ marked: number; fetched: number; notes: string[] }> {
   const inbound = matched
     .filter((m) => m.direction === "inbound")
     .map((m) => ({ lenderId: m.lenderId, occurredAt: m.occurredAt }));
   const notes: string[] = [];
-  if (inbound.length === 0) return { marked: 0, read: 0, notes };
+  if (inbound.length === 0) return { marked: 0, fetched: 0, notes };
 
   const { data: rows } = await supabase
     .from("meeting_proposal_attendees")
@@ -255,7 +255,7 @@ async function markProposalReplies(
       .map((m) => [`${m.lenderId}:${m.occurredAt}`, m.messageId]),
   );
   let marked = 0;
-  let read = 0;
+  let fetched = 0;
 
   for (const reply of found) {
     const update: Record<string, unknown> = {
@@ -263,15 +263,14 @@ async function markProposalReplies(
       updated_at: new Date().toISOString(),
     };
 
-    // Pull the text for this one message and let the reader have a go. It
-    // abstains on anything it cannot be sure of, so an unclear verdict still
-    // arrives as "they replied, you decide" rather than a wrong booking.
+    // Pull the text for this one message. Graph is the only part of this that
+    // has to happen here, because the token does.
     const messageId = messageFor.get(`${reply.lenderId}:${reply.repliedAt}`);
     const slots = slotsByProposal.get(reply.proposalId) ?? [];
 
-    // Every branch that skips the read says so. Silently marking "they
-    // replied" and leaving the verdict blank is indistinguishable from the
-    // reader abstaining, and that ambiguity has cost two rounds already.
+    // Every branch that skips the fetch says so. Silently marking "they
+    // replied" and leaving the text blank is indistinguishable from a reply
+    // the reader abstained on, and that ambiguity has cost two rounds already.
     if (!messageId) {
       notes.push("no message id for a detected reply");
     } else if (slots.length === 0) {
@@ -283,14 +282,12 @@ async function markProposalReplies(
       } else if (!text) {
         notes.push("reply text came back empty");
       } else {
-        const offeredSlots = slots.map((iso) => new Date(iso));
-        const reading = readReply({ text, offeredSlots, now: new Date() });
+        // Store the words, decide nothing. Reading them is wall-clock work —
+        // "Thursday works" only means a date if you know what today is — and
+        // this runs on a server whose today is UTC. The browser finishes the
+        // job, against his clock, and `reply_read_at` stays null until it has.
         update.reply_text = text;
-        update.reply_intent = reading.intent === "unclear" ? null : reading.intent;
-        update.slot_verdicts = deriveSlotVerdicts({ offeredSlots, reading });
-        update.countered_slot =
-          reading.intent === "countered" ? (reading.slot?.toISOString() ?? null) : null;
-        read += 1;
+        fetched += 1;
       }
     }
 
@@ -304,5 +301,5 @@ async function markProposalReplies(
   }
 
   if (marked > 0) revalidatePath("/dashboard");
-  return { marked, read, notes: [...new Set(notes)] };
+  return { marked, fetched, notes: [...new Set(notes)] };
 }

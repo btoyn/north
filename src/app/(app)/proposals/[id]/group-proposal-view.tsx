@@ -6,17 +6,17 @@ import Link from "next/link";
 import { CalendarCheck, Check, HelpCircle, MessageSquareReply, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { readReply } from "@/lib/reply-reader";
 import { describeSlot } from "@/lib/scheduling";
 import { MEETING_TYPE_LABELS } from "@/lib/labels";
 import {
   attendeesForSlot,
-  deriveSlotVerdicts,
+  readGroupReply,
   tallyGroupReplies,
   formatNameList,
   type AttendeeReply,
   type SlotVerdict,
 } from "@/lib/group-proposal";
+import { AutoReadReplies, type UnreadReply } from "@/components/auto-read-replies";
 import { cn } from "@/lib/utils";
 import { confirmGroupMeeting, recordGroupReply } from "@/app/(app)/scheduling/group-actions";
 
@@ -37,6 +37,8 @@ export interface GroupProposalAttendee {
   repliedAt: string | null;
   replyText: string | null;
   replyIntent: string | null;
+  /** When the browser interpreted `replyText`. Null means it still hasn't. */
+  replyReadAt: string | null;
   verdicts: string[];
   counteredSlot: string | null;
 }
@@ -90,8 +92,23 @@ export function GroupProposalView({ data }: { data: GroupProposalData }) {
   const label = data.customLabel?.trim() || MEETING_TYPE_LABELS[data.meetingType] || "Meeting";
   const booked = data.status === "booked";
 
+  // Replies the sweep fetched but nobody has interpreted. Reading them here,
+  // in his timezone, is the whole reason this is a client component.
+  const unread: UnreadReply[] = useMemo(
+    () =>
+      data.attendees.map((a) => ({
+        proposalId: data.id,
+        lenderId: a.lenderId,
+        replyText: a.replyText,
+        replyReadAt: a.replyReadAt,
+        offeredSlots: data.offeredSlots,
+      })),
+    [data.id, data.attendees, data.offeredSlots],
+  );
+
   return (
     <div className="flex flex-col gap-5">
+      <AutoReadReplies replies={unread} />
       {/* The useful output: one date, called out. */}
       {booked ? (
         <div className="rounded-[18px] border border-teal-border bg-teal-soft px-5 py-4">
@@ -273,21 +290,13 @@ function ReplyForm({
   const [override, setOverride] = useState<SlotVerdict[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const reading = useMemo(
-    () => (text.trim() ? readReply({ text, offeredSlots: slots, now }) : null),
+  const read = useMemo(
+    () => (text.trim() ? readGroupReply({ text, offeredSlots: slots, now }) : null),
     [text, slots, now],
   );
 
-  const derived = useMemo(() => {
-    if (!reading) return null;
-    return deriveSlotVerdicts({
-      offeredSlots: slots,
-      reading,
-      probes: slots.map((slot) => readReply({ text, offeredSlots: [slot], now })),
-    });
-  }, [reading, slots, text, now]);
-
-  const verdicts = override ?? derived;
+  const reading = read?.reading ?? null;
+  const verdicts = override ?? read?.verdicts ?? null;
 
   function submit() {
     if (!reading || !verdicts) return;
