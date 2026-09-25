@@ -47,10 +47,18 @@ const BLOCKING = new Set(["busy", "tentative", "oof", "unknown"]);
 export function parseGraphInstant(
   dateTime: string | undefined,
   timeZone?: string,
+  { utcOnly = false }: { utcOnly?: boolean } = {},
 ): Date | null {
   if (!dateTime) return null;
   const hasZone = /(?:Z|[+-]\d{2}:?\d{2})$/.test(dateTime);
   const utcish = !hasZone && (!timeZone || timeZone.toUpperCase() === "UTC");
+
+  // A naive time in a named zone has no offset to apply, so `new Date` reads it
+  // as the server's clock -- which is UTC, and would move a noon lunch to 6pm.
+  // For anything that gets written back to a meeting, refusing to answer is the
+  // only safe reading.
+  if (utcOnly && !hasZone && !utcish) return null;
+
   const parsed = new Date(hasZone ? dateTime : utcish ? `${dateTime}Z` : dateTime);
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }

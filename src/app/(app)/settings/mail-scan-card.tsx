@@ -52,7 +52,7 @@ export function MailScanCard({ state }: { state: MailScanState }) {
         failure?: string;
         detail?: string;
         error?: string;
-        responses?: { checked?: number; updated?: number; added?: number };
+        responses?: { checked?: number; updated?: number; added?: number; rescheduled?: number };
       };
       if (result.error) setNote(result.error);
       else if (result.failure) {
@@ -72,12 +72,17 @@ export function MailScanCard({ state }: { state: MailScanState }) {
           accepted > 0
             ? ` ${accepted} invitation ${accepted === 1 ? "answer" : "answers"} came back.`
             : "";
+        const moved = result.responses?.rescheduled ?? 0;
+        const times =
+          moved > 0
+            ? ` ${moved} ${moved === 1 ? "meeting" : "meetings"} updated from your calendar.`
+            : "";
         const picked =
           added > 0
             ? ` Picked up ${added} ${added === 1 ? "person" : "people"} added to a meeting in Outlook.`
             : "";
         setNote(
-          `Read ${scanned} message${scanned === 1 ? "" : "s"}, logged ${result.logged ?? 0}.${answers}${picked}`,
+          `Read ${scanned} message${scanned === 1 ? "" : "s"}, logged ${result.logged ?? 0}.${answers}${times}${picked}`,
         );
       }
       router.refresh();

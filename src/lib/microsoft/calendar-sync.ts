@@ -72,6 +72,8 @@ export interface ResponseSyncResult {
   updated: number;
   /** Partners the calendar had and the meeting didn't. */
   added: number;
+  /** Meetings whose time or cancellation the calendar corrected. */
+  rescheduled: number;
   failure?: string;
 }
 
@@ -92,13 +94,14 @@ export async function syncMeetingResponses(): Promise<ResponseSyncResult> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { checked: 0, updated: 0, added: 0, failure: "not_signed_in" };
+  if (!user)
+    return { checked: 0, updated: 0, added: 0, rescheduled: 0, failure: "not_signed_in" };
 
   const since = new Date(Date.now() - RESPONSE_WINDOW_DAYS * 86_400_000).toISOString();
 
   const { data: meetings } = await supabase
     .from("meetings")
-    .select("id, external_calendar_event_id, attendees:meeting_attendees(lender_id, response_status, lender:lenders(email))")
+    .select("id, start_at, end_at, status, external_calendar_event_id, attendees:meeting_attendees(lender_id, response_status, lender:lenders(email))")
     .not("external_calendar_event_id", "is", null)
     .eq("status", "confirmed")
     .gte("start_at", since)
@@ -121,6 +124,7 @@ export async function syncMeetingResponses(): Promise<ResponseSyncResult> {
   let checked = 0;
   let updated = 0;
   let added = 0;
+  let rescheduled = 0;
   let failure: string | undefined;
 
   for (const meeting of meetings ?? []) {
@@ -145,7 +149,24 @@ export async function syncMeetingResponses(): Promise<ResponseSyncResult> {
       continue;
     }
 
-    const attendees = result.attendees ?? [];
+    const event = result.event;
+    if (!event) continue;
+    const attendees = event.attendees;
+
+    // Outlook is the truth about when it is. He drags a lunch an hour later or
+    // calls it off there, and North has no way to know unless it asks -- which
+    // is exactly how the app ended up insisting on 6pm for a noon lunch.
+    const patch: Record<string, unknown> = {};
+    if (event.cancelled && meeting.status !== "canceled") patch.status = "canceled";
+    if (event.start && event.start.toISOString() !== new Date(meeting.start_at).toISOString()) {
+      patch.start_at = event.start.toISOString();
+      if (event.end) patch.end_at = event.end.toISOString();
+    }
+    if (Object.keys(patch).length > 0) {
+      patch.updated_at = new Date().toISOString();
+      const { error } = await supabase.from("meetings").update(patch).eq("id", meeting.id);
+      if (!error) rescheduled += 1;
+    }
 
     for (const change of responseChanges(rows, attendees)) {
       const { error } = await supabase
@@ -174,10 +195,10 @@ export async function syncMeetingResponses(): Promise<ResponseSyncResult> {
 
   // Somebody accepting is a coverage change, so the screens that read it have
   // to be told.
-  if (updated > 0 || added > 0) {
+  if (updated > 0 || added > 0 || rescheduled > 0) {
     revalidatePath("/dashboard");
     revalidatePath("/tiers");
   }
 
-  return { checked, updated, added, failure };
+  return { checked, updated, added, rescheduled, failure };
 }
